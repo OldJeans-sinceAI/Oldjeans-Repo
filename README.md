@@ -19,6 +19,7 @@ Testaa yhteys backendiin ajamalla
 npm init -y
 npm run test:yext
 ```
+Tämän testin onnistumiseen projektisi juuressa tulee olla .env tiedosto oikeilla avaimilla. Voit käyttää env_mockup tiedostoa apuna.
 
 ## Pisteytys
 
