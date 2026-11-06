@@ -7,8 +7,7 @@ Fonectan näkyvyystestin kaltainen paikallinen työkalu. Se tarkistaa, löytyyk�
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-py -m pip install -r requirements.txt
-py -m streamlit run app.py
+
 ```
 
 Jos aktivointi estyy, ohita kaksi ensimmäistä riviä ja aja asennus ja käynnistys suoraan `py -m`-komennoilla.
