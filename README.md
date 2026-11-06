@@ -12,6 +12,14 @@ py -m venv .venv
 
 Jos aktivointi estyy, ohita kaksi ensimmäistä riviä ja aja asennus ja käynnistys suoraan `py -m`-komennoilla.
 
+## Testit
+
+Testaa yhteys backendiin ajamalla
+```bash
+npm init -y
+npm run test:yext
+```
+
 ## Pisteytys
 
 - Kanavat 60 %: Google 20, Fonecta 15, Facebook 12, LinkedIn 10, Finder 8, Kauppalehti 8, Asiakastieto 7, Instagram 5, arvostelusivustot 5. Täysi osuma antaa koko painon, epävarma osuma 40 %.

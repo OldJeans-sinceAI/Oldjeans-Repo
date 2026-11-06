@@ -1,0 +1,5 @@
+# Yext API Configuration
+YEXT_BASE_URL=https://sbx-api.yextapis.com/
+YEXT_API_KEY=your_sandbox_api_key_here
+YEXT_ENTITY_ID=your_entity_id_here
+YEXT_API_VERSION=20261106

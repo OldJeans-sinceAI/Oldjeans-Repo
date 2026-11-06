@@ -1,0 +1,33 @@
+{
+  "name": "yext-backend-tests",
+  "version": "1.0.0",
+  "description": "Testing Yext Sandbox API connections",
+  "main": "tests/backend_connection_test.js",
+  "scripts": {
+    "test:yext": "node tests/backend_connection_test.js"
+  },
+  "dependencies": {
+    "axios": "^1.21.0",
+    "dotenv": "^16.6.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "author": "",
+  "license": "ISC",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OldJeans-sinceAI/Oldjeans-Repo.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/OldJeans-sinceAI/Oldjeans-Repo/issues"
+  },
+  "homepage": "https://github.com/OldJeans-sinceAI/Oldjeans-Repo#readme"
+}
