@@ -20,7 +20,4 @@ Jos aktivointi estyy, ohita kaksi ensimmäistä riviä ja aja asennus ja käynni
 
 ## Rajoitukset
 
-- Löytyminen perustuu DDGS-hakuun, ei kanavien omiin rajapintoihin. Se voi jättää profiileja löytämättä, ja haku voi rajoittaa pyyntöjä. Tuotantoon tarvitaan virallinen hakupalvelun API ja esim. Google Places API.
-- Pisteet ovat tämän työkalun oma mittari, eivät Google-sijoitus tai Fonectan menetelmä.
-- Sivuston haku estää sisäverkko-osoitteet (SSRF) ja lukee enintään 1,5 Mt sivua kohti.
-- Noudata hakupalvelujen ja sivustojen käyttöehtoja, robots.txt-ohjeita ja tietosuojalainsäädäntöä.
+- Löytyminen perustuu DDGS-hakuun, ei kanavien omiin rajapintoihin. Se voi jättää profiileja löytämättä, ja 
