@@ -1,6 +1,37 @@
 # Dependencies
 node_modules/
 
-# Environment variables
+# Environment variables / secrets
 .env
-.env.local
+.env.*
+!env_mockup
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Generated reports
+nakyvyysraportti.*
+
+# IDEs / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
