@@ -1,4 +1,4 @@
-streamlit>=1.36
-ddgs>=9.0
-requests>=2.32
-beautifulsoup4>=4.12
+# Everything runs on the Python 3.9+ standard library.
+# Optional, for data/analytics_daily.parquet and the mock analytics endpoint:
+pandas>=2.0
+pyarrow>=14
