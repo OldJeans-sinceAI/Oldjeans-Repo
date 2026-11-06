@@ -29,5 +29,8 @@
   "bugs": {
     "url": "https://github.com/OldJeans-sinceAI/Oldjeans-Repo/issues"
   },
-  "homepage": "https://github.com/OldJeans-sinceAI/Oldjeans-Repo#readme"
+  "homepage": "https://github.com/OldJeans-sinceAI/Oldjeans-Repo#readme",
+  "engines": {
+    "node": ">=20.11.0"
+  }
 }
