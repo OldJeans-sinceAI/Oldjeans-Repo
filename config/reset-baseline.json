@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "mock_entities_sha256": "9b8646440129e1a8bced0d3f589f1b33c0dd51cdf4d49b8c6204af58cf91755c",
+  "sandbox": {
+    "target_entity_id": "SinceAI18",
+    "hours": {},
+    "observed_at": "2026-11-07T19:29:14.567387+00:00",
+    "source": "Initial sandbox hours snapshot",
+    "source_sha256": "82e38096be7996368daeb6a39b8e3cc7ebc720911dcd48506b89dbf672e850b5"
+  }
+}

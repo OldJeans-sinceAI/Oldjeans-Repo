@@ -35,3 +35,36 @@ nakyvyysraportti.*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local agent instructions, conversations, and generated working documents.
+/AGENTS.md
+/CLAUDE.md
+/AGENT_WORKFLOW.md
+/HANDOFF*
+/handoff*
+/.agents/
+/.codex/
+/.claude/
+/tasks/
+/tools/shared-agents/
+/tools/build_product_handoff.py
+/tools/verify_product_handoff.py
+/app/teammate/SOURCE.md
+/docs/demo/
+/docs/detect-design/
+/docs/detect-suggest-design/
+/docs/suggest-design/
+/docs/product-handoff/
+/docs/legacy-readme.md
+/docs/legacy-upstream-readme.md
+
+# Application runtime and local test artifacts.
+/runtime/
+/outputs/
+/tests/browser/artifacts/
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+!/.env.example

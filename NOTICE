@@ -1,0 +1,9 @@
+Connect Suggests simulator, Since AI ry 2026.
+Original simulator code and synthetic data retain the terms in LICENSE.md.
+
+The reply interpreter and WhatsApp chat layout incorporate contributions from
+OldJeans-sinceAI/frontend (https://github.com/OldJeans-sinceAI/frontend).
+Interpreter source derives from c13b90b and d44905b; the WhatsApp visual derives
+from whatsapp_mock.py at 755f12b1e62072f43a6637ad28c93d9cd40210f6.
+That repository supplies no separate license file; no additional license is
+asserted for those contributions. Preserve this source attribution.

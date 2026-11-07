@@ -1,0 +1,117 @@
+{
+  "version": "1.0.0",
+  "status": "IMPLEMENTATION_DEFAULT_NOT_CALIBRATED",
+  "P01_regular_dispatch": {
+    "frequency": "TWICE_MONTHLY",
+    "days": [
+      1,
+      15
+    ],
+    "timezone": "business",
+    "window": "source_best_contact_window"
+  },
+  "P02_detection": {
+    "local_time": "09:00",
+    "on_evidence_change": true,
+    "horizon": "through_next_dispatch_plus_days",
+    "buffer_days": 2,
+    "include_current_status": true
+  },
+  "P03_bundle": {
+    "scope": "one_business_all_ready_dates_in_dispatch_window",
+    "per_date_decisions": true,
+    "atomic_batch": false
+  },
+  "P04_urgent_dispatch": {
+    "enabled": false,
+    "staff_visibility": true,
+    "preview_only_override": true
+  },
+  "P05_frequencies": [
+    "TWICE_MONTHLY",
+    "MONTHLY",
+    "PAUSED"
+  ],
+  "P06_expiry": {
+    "max_days": 14,
+    "end": "min(created_at_plus_max_days,first_target_local_midnight)",
+    "same_day_automatic_apply": false
+  },
+  "P07_duplicate": {
+    "decision_key_required": true,
+    "same_request_returns_original": true,
+    "different_request_status": 409
+  },
+  "P08_permissions": {
+    "allowed_change_kind": "DATE_HOURS",
+    "allowed_purpose": "CORRECTION",
+    "max_days": 365,
+    "mock_source_boolean": "PUBLIC_HOLIDAY_only",
+    "sandbox_import_source_boolean": false
+  },
+  "P09_evidence": {
+    "history_seasons": 3,
+    "centre_min_dates": 3,
+    "centre_min_agreement": 0.8,
+    "peer_min_entity_days": 30,
+    "peer_closed_share": 0.9,
+    "peer_requires_corroboration": true,
+    "comparable_own_min_dates": 2,
+    "event_own_min_dates": 2,
+    "neighbour_min_businesses": 3,
+    "radius_m": 1000
+  },
+  "P10_warning": {
+    "closure_max_age_days": 150,
+    "independent_closure_signals": 2,
+    "explicit_owner_confirmation_sufficient": true
+  },
+  "P11_priority": {
+    "urgent_days": 2,
+    "urgent_requires_material_issue": true,
+    "high_days": 7,
+    "search_window_days": 28,
+    "high_search_percentile": 75
+  },
+  "P12_apply": {
+    "retry_limit": 2,
+    "read_before_retry": true,
+    "missed_job_review_after_hours": 24,
+    "preserve_unrelated_hours": true
+  },
+  "P13_runtime": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "mock_port": 8787,
+    "state": "runtime/state.json",
+    "mock_state": "runtime/mock-state.json",
+    "external_llm": false
+  },
+  "P14_evaluation": {
+    "cutoff": "2026-11-06T00:00:00Z",
+    "date_from": "2026-11-07",
+    "date_to": "2027-01-06",
+    "runtime_feedback": false,
+    "opportunity_only_action": "NO_ACTION"
+  },
+  "P15_languages": {
+    "website_default": "en",
+    "website": [
+      "en",
+      "ko",
+      "fi"
+    ],
+    "customer": [
+      "fi",
+      "sv",
+      "nb",
+      "en"
+    ]
+  },
+  "P16_demo": {
+    "now": "2026-11-06T10:00:00+02:00",
+    "sandbox_api_version": "20261106",
+    "contact": "SIMULATED",
+    "preview_is_not_scheduled_delivery": true
+  }
+}
