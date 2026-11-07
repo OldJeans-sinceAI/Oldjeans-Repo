@@ -9,6 +9,9 @@ py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
 ```
+```bash
+source .venv/bin/activate
+```
 
 Jos aktivointi estyy, ohita kaksi ensimmäistä riviä ja aja asennus ja käynnistys suoraan `py -m`-komennoilla.
 
@@ -49,6 +52,13 @@ nvm use
 npm ci
 npm run test:yext
 ```
+
+3. Komenolla pytest ajat helposti muut testit
+
+```bash
+pytest
+```
+
 
 Testin onnistumiseen projektisi juuressa tulee olla `.env`-tiedosto oikeilla avaimilla. Onnistuessaan testi tulostaa `✅ Success!` ja yrityksen nimen. GitHubissa sama testi ajetaan automaattisesti `main`-haaraan pushatessa ja pull requestissa (`.github/workflows/backend-test.yml`), avaimet haetaan repositoryn secreteistä.
 
