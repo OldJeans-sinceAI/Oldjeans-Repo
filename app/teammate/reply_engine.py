@@ -70,25 +70,15 @@ class Reply:
 
 
 def parse_model_output(raw: str) -> Reply:
-    try:
-        value = json.loads(raw)
-        if not isinstance(value, dict) or set(value) != set(SCHEMA["required"]):
-            raise ValueError()
-        if value["intent"] not in SCHEMA["properties"]["intent"]["enum"]:
-            raise ValueError()
-        if any(
-            type(value[k]) is not bool for k in ("scope_match", "needs_clarification")
-        ):
-            raise ValueError()
-        if any(not isinstance(value[k], str) for k in ("hours", "date")):
-            raise ValueError()
-        if len(value["hours"]) > 200 or (
-            value["date"] and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value["date"])
-        ):
-            raise ValueError()
-        return Reply(status="OK", **value)
-    except (ValueError, TypeError, KeyError):
-        return Reply("UNAVAILABLE", error_code="INVALID_OUTPUT")
+ try:
+  v=json.loads(raw)
+  if not isinstance(v,dict) or set(v)!=set(SCHEMA["required"]): raise ValueError()
+  if v["intent"] not in SCHEMA["properties"]["intent"]["enum"]: raise ValueError()
+  if any(type(v[k]) is not bool for k in ("scope_match","needs_clarification")): raise ValueError()
+  if any(not isinstance(v[k],str) for k in ("hours","date")): raise ValueError()
+  if len(v["hours"])>200 or (v["date"] and not re.fullmatch(r"\d{4}-\d{2}-\d{2}",v["date"])): raise ValueError()
+  return Reply(status="OK",**v)
+ except (ValueError,TypeError,KeyError): return Reply("UNAVAILABLE",error_code="INVALID_OUTPUT")
 
 
 class ReplyEngine:
