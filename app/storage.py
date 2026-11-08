@@ -64,7 +64,6 @@ class StateStore:
         self.data = self._load()
         self._committed = copy.deepcopy(self.data)
 
-    # ---------------------------------------------------------------- load
     def _load(self) -> dict:
         if not os.path.exists(self.path):
             if os.path.exists(self.bak):
@@ -100,7 +99,6 @@ class StateStore:
         data.setdefault("server_secret", None)
         return data
 
-    # ---------------------------------------------------------------- write
     def _atomic_write(self, data: dict) -> None:
         directory = os.path.dirname(os.path.abspath(self.path))
         os.makedirs(directory, exist_ok=True)
@@ -141,7 +139,6 @@ class StateStore:
                 raise
             self._committed = copy.deepcopy(self.data)
 
-    # ---------------------------------------------------------------- access
     @property
     def lock(self) -> threading.RLock:
         return self._lock

@@ -59,8 +59,7 @@ class Baseline:
         cutoff = datetime(self.snap.year, self.snap.month, self.snap.day).timestamp() * 1000
         self.closed_signal = set()
         for r in reviews:
-            if r["publisherDate"] < cutoff and r["publisherDate"] > cutoff - 150 * 86400000 and \
-                    any(w in r["content"].lower() for w in PERM_WORDS):
+            if r["publisherDate"] < cutoff and r["publisherDate"] > cutoff - 150 * 86400000 and any(w in r["content"].lower() for w in PERM_WORDS):
                 self.closed_signal.add(r["locationId"])
         for s in sugg:
             if s["fieldName"] == "closed" and s["dateCreated"] < self.snap.isoformat():
