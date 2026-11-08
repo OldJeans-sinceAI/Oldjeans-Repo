@@ -61,18 +61,18 @@ def parse_intervals(spec: str) -> list[tuple[int, int]]:
         a, b = part.split("-", 1)
         if not (_TIME_RE.match(a) and _TIME_RE.match(b)):
             raise HoursError(f"interval {part!r} has an invalid clock value")
-        sm, em = _time_to_minutes(a), _time_to_minutes(b)
-        if sm == em:
+        start_minutes, end_minutes = _time_to_minutes(a), _time_to_minutes(b)
+        if start_minutes == end_minutes:
             raise HoursError(
                 f"interval {part!r} is zero length; use 00:00-23:59 for 24 hours"
             )
-        if em < sm and not (a == "00:00" and b == "23:59"):
-            em += 1440  # overnight rollover into the next date
-        out.append((sm, em))
+        if end_minutes < start_minutes and not (a == "00:00" and b == "23:59"):
+            end_minutes += 1440  # overnight rollover into the next date
+        out.append((start_minutes, end_minutes))
     # overlap check, including wrap of an overnight tail into the first interval
     ordered = sorted(out)
-    for (a1, b1), (a2, b2) in zip(ordered, ordered[1:]):
-        if a2 < b1:
+    for (start1, end1), (start2, end2) in zip(ordered, ordered[1:]):
+        if start2 < end1:
             raise HoursError("intervals overlap")
     return out
 
