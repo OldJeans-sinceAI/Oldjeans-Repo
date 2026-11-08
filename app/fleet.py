@@ -12,6 +12,7 @@ from .domain import parse_dt, is_proposal_active
 
 class FleetRunner:
     def __init__(self, service):
+        self.service = service
         self.s = service
         self.state = StateStore(str(Path(service.state_dir) / "fleet.json"))
         self.lock = self.state.lock
