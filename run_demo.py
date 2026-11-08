@@ -40,12 +40,20 @@ def main():
     p.add_argument("--now", default=os.getenv("APP_NOW", "2026-11-06T10:00:00+02:00"))
     p.add_argument("--real-clock", action="store_true")
     p.add_argument(
+        "--presentation", action="store_true",
+        help="Fixed Next-button rehearsal using its own mock state; manual sandbox stays separate.",
+    )
+    p.add_argument(
         "--with-sandbox",
         action="store_true",
         help="Enable the team's real Yext workspace at /sandbox; owner approval is still required.",
     )
     p.add_argument("--state-dir", default=os.getenv("STATE_DIR", str(ROOT / "runtime")))
     a = p.parse_args()
+    if a.presentation and (a.mode != "mock" or a.real_clock):
+        p.error("--presentation requires mock mode and the frozen demo clock.")
+    if a.presentation:
+        a.now = "2026-11-06T10:00:00+02:00"
     sandbox_key = os.getenv("YEXT_API_KEY")
     sandbox_target = os.getenv("YEXT_ENTITY_ID")
     if a.with_sandbox and (a.mode != "mock" or not sandbox_key or not sandbox_target):
@@ -62,10 +70,14 @@ def main():
         p.error(
             "Port is in use. Choose another --port / --mock-port; existing processes are left running."
         )
-    state = Path(a.state_dir).resolve()
+    base_state = Path(a.state_dir).resolve()
+    base_state.mkdir(parents=True, exist_ok=True)
+    os.chmod(base_state, 0o700)
+    state = base_state / "presentation" if a.presentation else base_state
     state.mkdir(parents=True, exist_ok=True)
     os.chmod(state, 0o700)
-    lock = (state / "app.lock").open("w")
+    # Both launch modes share this lock, including their optional sandbox workspace.
+    lock = (base_state / "app.lock").open("w")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
@@ -115,13 +127,18 @@ def main():
         from app.server import WebServer
 
         service = Service(ROOT, state, mode=a.mode, now=None if a.real_clock else a.now)
+        service.presentation_mode = a.presentation
+        if a.presentation:
+            from app.replies import OwnerReplies
+            from app.teammate.reply_engine import ReplyEngine
+            service.replies = OwnerReplies(engine=ReplyEngine(api_key=""))
         sandbox_service = None
         if a.with_sandbox:
             from examples.yext_client import YextClient
 
             sandbox_service = Service(
                 ROOT,
-                state / "sandbox",
+                base_state / "sandbox",
                 mode="sandbox",
                 now=None,
                 source_id=os.getenv("SANDBOX_SOURCE_ENTITY_ID", "FI-D0001"),

@@ -33,7 +33,7 @@ git clone https://github.com/OldJeans-sinceAI/Oldjeans-Repo.git
 cd Oldjeans-Repo
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python run_demo.py --mode mock --port 8000 --mock-port 8787
+.venv/bin/python run_demo.py --presentation --mode mock --port 8000 --mock-port 8787
 ```
 
 Use `run_demo.py` (it starts the site plus an isolated local Yext mock); do not start
@@ -45,6 +45,21 @@ copied from `.env.example` to `.env`; the supplied dataset stays unchanged and w
 state is written under the ignored `runtime/` directory. Proposals, decisions, and
 contact preferences belong to that application state: no custom Yext Knowledge Graph
 fields or new publishers are added.
+
+**Next-button presentation.** The default page in this launch mode is a fixed,
+English-only rehearsal. Press **Next** once to prepare the real 3,032-entity scan;
+wait for it to finish before recording. Then keep pressing **Next**: WhatsApp approval
+→ email edit (`11:00-16:00`, then `CONFIRM`) → SMS decline (`NO`, then `CONFIRM`).
+Each chapter shows the proposal, outgoing message, owner screen and outcome. There
+is no typing or business selection. The owner is explicitly simulated, while
+decisions and read-back use the real application APIs against the local Yext mock.
+Unavailable APIs stop the presentation rather than display a successful result.
+
+**Restart demo** resets only `runtime/presentation/`. The ordinary `runtime/` state
+and optional `runtime/sandbox/` state are kept separate. Gemini is disabled for this
+rehearsal, even when a key is configured. **Explore workspace** opens the interactive
+UI using the same presentation data. To use the ordinary workspace and optional
+Gemini instead, stop the server and run the command without `--presentation`.
 
 **Optional Gemini (owner-reply interpretation).** Set `GEMINI_API_KEY` privately in
 `.env` and keep `GEMINI_ENABLED=true`; the key stays server-side and is never sent to
@@ -62,22 +77,22 @@ general production reset. Never commit keys.
 With those credentials configured, run:
 
 ```sh
-.venv/bin/python run_demo.py --mode mock --with-sandbox
+.venv/bin/python run_demo.py --presentation --mode mock --with-sandbox
 ```
 
 ## Build status (scope of this document)
 
-This README describes what runs from the current `main` branch: the guided five-step
-demo, the WhatsApp-style owner chat, and the full operator workspace (`web/app.js`,
-`web/demo.js`, `web/whatsapp.js`). Additional channel mock-ups (email and SMS
-reply-only layouts) and revised journey navigation are tested locally but **not yet
-merged to `main`**; treat them as in progress. Earlier local runs recorded 95 product
-and 23 browser checks against the local tree. Separately, on **8 Nov 2026**, a fresh
-checkout of `main` at `a1c50b6` passed **95 product tests** and **14 browser journey
-checks**, including the 3,032-entity scan, approve/edit/decline, independent mock
-read-back, concurrent-change rejection, and the no-Gemini fallback. These checks used
-an isolated mock; they did not send real messages or repeat the live sandbox write.
-The subsequent `main` refactor at `95d1eff` also passed all **7 HTTP contract tests**.
+This branch includes the Next-button presentation, the interactive guided journey,
+the operator workspace, a WhatsApp phone, an SMS phone and an email desktop mailbox.
+WhatsApp uses message buttons. Email and SMS use replies plus a confirmation preview;
+they do not pretend to support embedded decision buttons.
+
+The integration passed **95 product tests** on **8 Nov 2026**. Browser checks exercise
+the actual 3,032-entity scan, approve/edit/decline, independent mock read-back, reload,
+repeat rehearsals and unavailable-backend handling. Tests use isolated mock state;
+they do not send real messages or repeat the live sandbox write. The browser scripts
+are in `tests/browser/`; Playwright and its Chromium browser are development-only
+requirements, not needed to run the site.
 
 ## The five steps
 
@@ -94,7 +109,7 @@ The subsequent `main` refactor at `95d1eff` also passed all **7 HTTP contract te
    hours, then independently read back. Success, pending, failure, and rejection stay
    distinct; publisher timings are estimates, not proof of live publication.
 
-For a walkthrough, open **Guided demo**, select **2026-12-24**, and click
+For a manual walkthrough, choose **Explore workspace → Guided demo**, select **2026-12-24**, and click
 **Scan all 3032 businesses → Review a suggestion → Prepare the owner message**.
 Open the owner view, approve/edit/decline, then return to the guide to inspect the
 result. A scan checks the entire directory; each owner decides only their own proposal.

@@ -1090,6 +1090,7 @@ function render() {
   renderOperator();
 }
 function renderOperator() {
+  if (presentationActive()) return renderPresentation();
   const counts = Object.fromEntries(
     ["SUGGEST", "FLAG", "NO_ACTION"].map((a) => [
       a,
@@ -1109,7 +1110,7 @@ function renderOperator() {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><strong>${t("sideTitle")}</strong>${t("sideText")}<br><br>Fonecta × SinceAI 2026</div></aside><main class="main"><header class="topbar"><div class="breadcrumb">Connect / ${t("platform")}</div><div class="top-actions"><span class="badge mock">● ${t(state.health?.mode === "sandbox" ? "sandbox" : "mock")}</span>${APP_BASE || state.health?.sandbox_available ? `<a class="workspace-switch" href="${APP_BASE ? "/" : "/sandbox/"}">${t(APP_BASE ? "backToMock" : "openSandbox")}</a>` : ""}<button class="small reset-control" id="reset-open">↺ ${t("reset")}</button>${language()}</div></header><div class="hero"><div><p class="eyebrow">${t("tag")}</p><h1>${state.tab === "demo" ? "From a signal to the right hours." : state.tab === "inbox" ? t("inboxTitle") : t("title")}</h1><p>${state.tab === "demo" ? "Follow the complete journey: check the evidence, offer a change, reach the owner and verify the outcome." : state.tab === "inbox" ? t("inboxIntro") : t("intro")}</p></div><div class="hero-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="8" y="10" width="32" height="30" rx="6"/><path d="M8 20h32M16 6v8M32 6v8m-15 15 5 5 10-11"/></svg></div></div>${
+    )}</nav><div class="sidebar-bottom"><strong>${t("sideTitle")}</strong>${t("sideText")}<br><br>Fonecta × SinceAI 2026</div></aside><main class="main"><header class="topbar"><div class="breadcrumb">Connect / ${t("platform")}</div><div class="top-actions">${!APP_BASE && state.health?.presentation_mode ? '<a class="workspace-switch" href="/">Presentation demo</a>' : ""}<span class="badge mock">● ${t(state.health?.mode === "sandbox" ? "sandbox" : "mock")}</span>${APP_BASE || state.health?.sandbox_available ? `<a class="workspace-switch" href="${APP_BASE ? "/" : "/sandbox/"}">${t(APP_BASE ? "backToMock" : "openSandbox")}</a>` : ""}<button class="small reset-control" id="reset-open">↺ ${t("reset")}</button>${language()}</div></header><div class="hero"><div><p class="eyebrow">${t("tag")}</p><h1>${state.tab === "demo" ? "From a signal to the right hours." : state.tab === "inbox" ? t("inboxTitle") : t("title")}</h1><p>${state.tab === "demo" ? "Follow the complete journey: check the evidence, offer a change, reach the owner and verify the outcome." : state.tab === "inbox" ? t("inboxIntro") : t("intro")}</p></div><div class="hero-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="8" y="10" width="32" height="30" rx="6"/><path d="M8 20h32M16 6v8M32 6v8m-15 15 5 5 10-11"/></svg></div></div>${
     state.tab === "demo"
       ? renderDemo()
       : state.tab === "inbox"
@@ -1270,7 +1271,7 @@ function renderCases() {
     )}</tbody></table></div>${pager("cases", state.caseOffset, cases.length)}`;
 }
 function renderInbox() {
-  return `<section class="panel"><label class="inbox-filter">${t("contact")}<select id="message-mode"><option value="ALL" ${state.messageMode === "ALL" ? "selected" : ""}>${t("all")}</option><option value="PREVIEW" ${state.messageMode === "PREVIEW" ? "selected" : ""}>${t("fleetPreview")}</option><option value="SCHEDULED" ${state.messageMode === "SCHEDULED" ? "selected" : ""}>${t("fleetContact")}</option></select></label>${!state.messages.length ? empty(t("emptyInbox"), t("emptyInboxText")) : state.messages.map((m) => `<article class="message-card"><div class="message-top"><h3>${h(businessName(m.entity_id))}</h3><div class="meta-row"><span class="badge mock">${h(m.channel)}</span>${badge(m.status)}</div></div><small>${h(m.entity_id)} · ${h(m.language.toUpperCase())}</small><div class="message-envelope"><strong>${h(m.sender || "Fonecta Connect · Demo")}</strong><small>${t("recipient")}: ${h(m.recipient || m.entity_id)}</small>${m.subject ? `<strong>${h(m.subject)}</strong>` : ""}<small>${t("deliveryDemo")}</small></div><div class="bubble channel-${h(m.channel.toLowerCase())}">${h(m.text).replace(/\n/g, "<br>")}</div><small>${t("simulation")} ${m.scheduled_at ? " · " + t("scheduled") + " " + h(dateLabel(m.scheduled_at)) : ""}</small>${m.owner_entry_path ? `<div class="actions"><a class="owner-link" href="${h(APP_BASE + m.owner_entry_path)}" target="_blank" rel="noopener noreferrer">${t("openCustomer")} ↗</a></div>` : ""}</article>`).join("")}${pager("messages", state.messageOffset, state.messageTotal)}</section>`;
+  return `<section class="panel"><label class="inbox-filter">${t("contact")}<select id="message-mode"><option value="ALL" ${state.messageMode === "ALL" ? "selected" : ""}>${t("all")}</option><option value="PREVIEW" ${state.messageMode === "PREVIEW" ? "selected" : ""}>${t("fleetPreview")}</option><option value="SCHEDULED" ${state.messageMode === "SCHEDULED" ? "selected" : ""}>${t("fleetContact")}</option></select></label>${!state.messages.length ? empty(t("emptyInbox"), t("emptyInboxText")) : state.messages.map((m) => `<article class="message-card"><div class="message-top"><h3>${h(businessName(m.entity_id))}</h3><div class="meta-row"><span class="badge mock">${h(m.channel)}</span>${badge(m.status)}</div></div><small>${h(m.entity_id)} · ${h(m.language.toUpperCase())}</small><div class="message-envelope"><strong>${h(m.sender || "Fonecta Connect · Demo")}</strong><small>${t("recipient")}: ${h(m.recipient || m.entity_id)}</small>${m.subject ? `<strong>${h(m.subject)}</strong>` : ""}<small>${t("deliveryDemo")}</small></div><div class="bubble channel-${h(m.channel.toLowerCase())}">${h(m.text).replace(/\n/g, "<br>")}</div><small>${t("simulation")} ${m.scheduled_at ? " · " + t("scheduled") + " " + h(dateLabel(m.scheduled_at)) : ""}</small>${m.owner_entry_path ? `<div class="actions"><a class="owner-link" href="${h(channelOwnerLink(m.owner_entry_path, m.channel))}" target="_blank" rel="noopener noreferrer">${t("openCustomer")} ↗</a></div>` : ""}</article>`).join("")}${pager("messages", state.messageOffset, state.messageTotal)}</section>`;
 }
 function bindCommon() {
   document.querySelector("#search")?.addEventListener("input", (e) => {
@@ -1387,8 +1388,10 @@ async function refreshOwner() {
   }
 }
 function renderCustomer() {
+  if (presentationActive()) return renderPresentation();
+  if (state.owner && ownerMockChannel()) return renderChannelCustomer(ownerMockChannel());
   if (state.owner && isWhatsAppView()) return renderWhatsAppCustomer();
-  app.innerHTML = `<main class="customer-shell"><header class="customer-header"><div class="customer-brand">${brand()}</div>${language()}</header>${ownerJourney()}<div class="customer-context"><span class="badge mock">● ${t(state.proposals[0]?.mode === "sandbox" ? "sandbox" : "mock")}</span></div>${!state.owner ? `<div class="customer-card">${empty(t("noSession"), "")}<a href="${APP_BASE}/">${t("returnHome")}</a></div>` : `<p class="eyebrow">${h(state.proposals[0]?.business_name || state.owner.entity_id)}</p><h1>${t("customerWelcome")}</h1><p class="muted">${t("customerIntro")}</p>${state.proposals.length > 1 ? `<div class="notice">${t("bundle")}</div>` : ""}${state.proposals.map(renderProposal).join("")}<a class="journey-return" href="${APP_BASE}/">← ${APP_BASE ? "Back to workspace" : "Back to the guided demo"}</a>${renderSettings()}`}<div class="footer-note">${t("simulation")}</div></main>`;
+  app.innerHTML = `<main class="customer-shell"><header class="customer-header"><div class="customer-brand">${brand()}</div>${language()}</header>${ownerJourney()}<div class="customer-context"><span class="badge mock">● ${t(state.proposals[0]?.mode === "sandbox" ? "sandbox" : "mock")}</span></div>${!state.owner ? `<div class="customer-card">${empty(t("noSession"), "")}<a href="${APP_BASE}/">${t("returnHome")}</a></div>` : `<p class="eyebrow">${h(state.proposals[0]?.business_name || state.owner.entity_id)}</p><h1>${t("customerWelcome")}</h1><p class="muted">${t("customerIntro")}</p>${state.proposals.length > 1 ? `<div class="notice">${t("bundle")}</div>` : ""}${state.proposals.map(renderProposal).join("")}${resolvedJourney(ownerJourneyOutcome()) ? "" : ownerDemoNavigation()}${renderSettings()}`}<div class="footer-note">${t("simulation")}</div></main>`;
   bindCommon();
 }
 function renderProposal(p) {
@@ -1419,6 +1422,9 @@ function renderDraft(p) {
   return `<div class="notice ${d.status === "READY" ? "" : "warn"}" data-reply-status="${h(d.status)}">${h(draftText(d))}<br><small>${t("previewOnly")}${d.interpretation ? ` · ${h(d.interpretation.provider)} · ${(d.interpretation.latency_ms / 1000).toFixed(1)}s` : ""}</small>${d.status === "READY" ? `<div class="actions"><button class="primary" data-draft="${h(p.proposal_id)}">${t("confirmReply")}</button></div>` : d.status === "UNAVAILABLE" || d.interpretation?.error_code === "NOT_CONFIGURED" ? `<div class="actions"><button data-edit="${h(p.proposal_id)}">Enter hours manually</button></div>` : ""}</div>`;
 }
 function renderResult(p, r, refreshContext = IS_OWNER ? "owner" : "case") {
+  if (journeyOutcome(p, r) === "EXPIRED") {
+    return '<div class="notice warn"><h2>This proposal is no longer available.</h2><p>It expired or was replaced before a decision was recorded. Review a current proposal to continue.</p></div>';
+  }
   const refreshButton = refreshContext === "demo" ? ""
     : `<button class="small" ${refreshContext === "owner" ? "data-refresh-owner" : `data-case="${h(p.case_id)}"`}>${t("refresh")}</button>`;
   const ok = r?.application_status === "SUCCEEDED",
@@ -1580,8 +1586,9 @@ async function exportCSV() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 document.addEventListener("click", async (e) => {
+  if (e.target.closest("[data-presentation-next], [data-presentation-restart]")) return;
   const b = e.target.closest("button");
-  if (!b || b.disabled || b.matches("[data-wa-composer] [type=submit]")) return;
+  if (!b || b.disabled || b.matches("[data-wa-composer] [type=submit], [data-sms-composer] [type=submit], [data-email-composer] [type=submit]")) return;
   const old = b.innerHTML;
   try {
     b.disabled = true;
@@ -1825,10 +1832,12 @@ dialog.addEventListener("click", (e) => {
     else {
       render();
       state.health = await api("/api/v1/health");
+      if (!APP_BASE && state.health.presentation_mode && new URLSearchParams(location.search).get("view") !== "workspace") state.tab = "presentation";
       await loadBusinesses();
       await refreshCases();
       await refreshFleet();
-      if (!APP_BASE) await restoreDemo();
+      if (!APP_BASE) { await restoreDemo(); await maybeAdvanceToNextBusiness();
+      if (presentationActive()) await initPresentation(); }
       render();
       if (sessionStorage.getItem("reset-complete" + APP_BASE)) { sessionStorage.removeItem("reset-complete" + APP_BASE); toast(t("resetSuccess")); }
     }

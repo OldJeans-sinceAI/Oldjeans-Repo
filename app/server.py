@@ -252,7 +252,7 @@ class Handler(BaseHTTPRequestHandler):
                 "text/html; charset=utf-8",
             )
             return True
-        if path in ("/app.js", "/demo.js", "/whatsapp.js", "/styles.css", "/whatsapp.css"):
+        if path in ("/app.js", "/demo.js", "/whatsapp.js", "/styles.css", "/whatsapp.css", "/channel-mockups.js", "/channel-mockups.css", "/presentation.js", "/presentation.css"):
             self.reply(
                 200,
                 (s.root / "web" / path[1:]).read_bytes(),
@@ -325,6 +325,7 @@ class Handler(BaseHTTPRequestHandler):
                 {
                     **s.health(),
                     "sandbox_available": self.server.sandbox_service is not None,
+                    "presentation_mode": bool(getattr(s, "presentation_mode", False)),
                 },
             )
         if path.startswith("/api/v1/operator/"):

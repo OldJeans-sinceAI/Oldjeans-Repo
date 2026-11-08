@@ -30,6 +30,7 @@ class DeliverablesTests(unittest.TestCase):
             "README.md", "LICENSE.md", "NOTICE", "config/openapi.json",
             "config/policies.json", "config/reset-baseline.json", "run_demo.py",
             "web/app.js", "web/demo.js", "web/whatsapp.js", "web/whatsapp.css",
+            "web/channel-mockups.js", "web/channel-mockups.css",
         ):
             with self.subTest(path=name):
                 self.assertGreater((ROOT / name).stat().st_size, 100)

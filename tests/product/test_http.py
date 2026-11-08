@@ -81,16 +81,17 @@ class HTTPTests(unittest.TestCase):
         )
         return p
 
-    def test_whatsapp_assets_are_scoped_to_the_static_allowlist(self):
-        for path, mime in (("/whatsapp.js", "text/javascript"), ("/whatsapp.css", "text/css")):
+    def test_channel_assets_are_scoped_to_the_static_allowlist(self):
+        for path, mime in (("/whatsapp.js", "text/javascript"), ("/whatsapp.css", "text/css"), ("/channel-mockups.js", "text/javascript"), ("/channel-mockups.css", "text/css")):
             with self.http.open(self.base + path) as response:
                 self.assertEqual(response.status, 200)
                 self.assertTrue(response.headers["Content-Type"].startswith(mime))
                 self.assertIn("script-src 'self'", response.headers["Content-Security-Policy"])
         for path in ("/private/internal.py", "/api/messages", "/api/reply"):
             self.request(path, expected=404)
-        with self.http.open(self.base + "/customer?view=whatsapp") as response:
-            self.assertEqual(response.status, 200)
+        for view in ("whatsapp", "email", "sms"):
+            with self.http.open(self.base + "/customer?view=" + view) as response:
+                self.assertEqual(response.status, 200)
         self.request("/api/v1/businesses/A/contact-preferences", expected=401)
 
     def test_http_whole_journey_contracts(self):

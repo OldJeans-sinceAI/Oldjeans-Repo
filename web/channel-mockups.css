@@ -1,0 +1,133 @@
+/* Local channel previews; all decisions use the shared owner controls. */
+.channel-owner-shell { max-width: 1180px; }
+.cm-intro { margin: 32px 0 28px; }
+.cm-intro h1 { font-size: clamp(28px, 4vw, 38px); margin: 8px 0 12px; }
+.cm-intro > p:last-child { color: var(--muted); line-height: 1.6; }
+.cm-mockups { color: #203a35; }
+.cm-mockups * { box-sizing: border-box; }
+.cm-mockups article { margin-bottom: 24px; overflow-wrap: anywhere; }
+.cm-mockups h2 { line-height: 1.3; }
+/* A desktop monitor contains the mail client; the email itself is ordinary HTML. */
+#email-demo { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; color: #242b32; }
+#email-demo .cm-monitor { margin: 0 auto 28px; width: 100%; }
+#email-demo .cm-monitor-bezel { position: relative; padding: 22px 12px 0; border-radius: 18px 18px 10px 10px; background: #292f34; border: 1px solid #1c2226; box-shadow: 0 20px 45px #192c3426; }
+#email-demo .cm-monitor-camera { position: absolute; width: 5px; height: 5px; border-radius: 50%; top: 9px; left: calc(50% - 2px); background: #101519; box-shadow: inset 0 0 0 1px #485059; }
+#email-demo .cm-monitor-chin { display: grid; place-items: center; height: 39px; margin: 0 -12px; background: linear-gradient(#e2e5e7, #c5cbd0); border-radius: 0 0 9px 9px; }
+#email-demo .cm-monitor-chin span { width: 6px; height: 6px; border-radius: 50%; background: #7b858d; }
+#email-demo .cm-monitor-stand { width: 120px; height: 58px; margin: auto; background: linear-gradient(90deg, #b6bec5, #e0e4e7 48%, #b7bec5); clip-path: polygon(20% 0, 80% 0, 95% 100%, 5% 100%); }
+#email-demo .cm-monitor-foot { width: 235px; height: 14px; margin: -1px auto 0; border-radius: 50% 50% 4px 4px; background: linear-gradient(#e8ebee, #b9c1c7); box-shadow: 0 8px 16px #25353d18; }
+#email-demo .cm-email { display: flex; flex-direction: column; height: 660px; background: #fff; border: 1px solid #111a21; overflow: hidden; }
+#email-demo .cm-email-toolbar { display: flex; align-items: center; gap: 10px; min-height: 47px; padding: 10px 18px; background: #0f6cbd; color: #fff; font-size: 14px; flex-shrink: 0; }
+#email-demo .cm-mail-icon { font-size: 21px; line-height: 1; }
+#email-demo .cm-mail-account { font-size: 12px; opacity: .85; margin-left: 22px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#email-demo .cm-window-controls { margin-left: auto; white-space: nowrap; opacity: .8; font-size: 13px; }
+#email-demo .cm-email-layout { display: grid; grid-template-columns: 140px 215px minmax(0, 1fr); flex: 1; min-height: 0; }
+#email-demo .cm-email-folders { padding: 25px 7px; background: #f4f5f7; border-right: 1px solid #e2e5e8; font-size: 12px; }
+#email-demo .cm-email-folders > p { padding: 0 12px; margin: 0 0 14px; color: #717981; font-size: 11px; }
+#email-demo .cm-folder { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 4px; margin-bottom: 5px; color: #626970; }
+#email-demo .cm-folder.active { background: #dcebf7; color: #174f7e; font-weight: 600; }
+#email-demo .cm-folder small { margin-left: auto; font-size: 11px; }
+#email-demo .cm-email-list { min-width: 0; border-right: 1px solid #dfe3e7; background: #fafbfc; }
+#email-demo .cm-email-list h2 { display: flex; justify-content: space-between; align-items: baseline; padding: 21px 14px; margin: 0; border-bottom: 1px solid #e2e5e8; font-size: 15px; }
+#email-demo .cm-email-list h2 small { font-size: 10px; font-weight: 400; color: #6f7780; }
+#email-demo .cm-mail-selected { display: grid; gap: 6px; padding: 18px 13px; border-left: 3px solid #0f6cbd; border-bottom: 1px solid #dbe8f2; background: #eaf3fa; font-size: 12px; line-height: 1.45; }
+#email-demo .cm-mail-selected strong { font-size: 13px; }
+#email-demo .cm-mail-selected small { color: #67717b; font-size: 11px; }
+#email-demo .cm-mail-count { margin-top: 8px; font-size: 10px; color: #5a6d7d; }
+#email-demo .cm-email-reading { min-width: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #ccd1d6 transparent; padding-bottom: 24px; }
+#email-demo .cm-email-heading { padding: 24px 25px 18px; border-bottom: 1px solid #eceef0; }
+#email-demo .cm-email-heading h2 { font-size: 20px; font-weight: 500; line-height: 1.4; margin: 0 0 9px; color: #242b32; }
+#email-demo .cm-email-tag { font-size: 10px; background: #eef0f2; padding: 3px 7px; border-radius: 3px; color: #59636c; }
+#email-demo .cm-sender { display: flex; align-items: center; gap: 10px; padding: 19px 25px 0; font-size: 13px; }
+#email-demo .cm-sender small { display: block; margin-top: 4px; font-size: 11px; color: #69737d; }
+.cm-avatar { display: grid; place-items: center; flex-shrink: 0; width: 39px; height: 39px; background: #dcedc5; border-radius: 50%; font-weight: 800; color: #194538; }
+#email-demo .cm-avatar { width: 34px; height: 34px; font-size: 15px; background: #e5eff8; color: #25649a; font-weight: 500; }
+#email-demo .cm-email-body { padding: 8px 25px 0; font-size: 13px; line-height: 1.65; }
+#email-demo .cm-email-body p { margin: 15px 0; }
+#email-demo .cm-email-hours { width: 100%; margin: 17px 0; font-size: 13px; border-collapse: collapse; }
+#email-demo .cm-email-hours th, #email-demo .cm-email-hours td { padding: 9px 10px; border-bottom: 1px solid #e6eaed; text-align: left; }
+#email-demo .cm-email-hours th { font-weight: 400; color: #68737c; width: 53%; }
+#email-demo .cm-email-hours td { font-weight: 600; }
+#email-demo .cm-signoff { color: #5f6973; }
+#email-demo .cm-email-reply-actions { padding: 10px 25px 0; }
+#email-demo button { font-family: inherit; font-size: 12px; color: #454f59; border: 1px solid #cdd3d8; background: white; border-radius: 4px; min-height: 34px; padding: 7px 15px; }
+#email-demo .cm-email-composer { margin: 16px 25px 0; border: 1px solid #ccd3d9; border-radius: 5px; box-shadow: 0 2px 5px #202d3610; overflow: hidden; }
+#email-demo .cm-email-reply-to { padding: 13px; font-size: 12px; color: #64717d; border-bottom: 1px solid #edf0f2; }
+#email-demo textarea { display: block; width: 100%; resize: vertical; border: none; border-radius: 0; line-height: 1.5; font-family: inherit; font-size: 16px; padding: 14px; min-height: 130px; color: #242b32; }
+#email-demo .cm-email-compose-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 13px; }
+#email-demo .cm-email-send { color: white; background: #0f6cbd; border-color: #0f6cbd; }
+#email-demo button:disabled { opacity: .5; }
+#email-demo .cm-email-thread-message { margin: 20px 25px 0; padding: 17px 0; border-top: 1px solid #dde3e8; font-size: 13px; line-height: 1.6; }
+#email-demo .cm-thread-sender small { display: block; color: #76808a; font-size: 11px; }
+#email-demo .cm-email-thread-message p { white-space: pre-wrap; }
+#email-demo a:focus-visible, #email-demo button:focus-visible, #email-demo textarea:focus-visible { outline: 2px solid #0f6cbd; outline-offset: 2px; }
+.cm-email-help { text-align: center; color: var(--muted); font-size: 12px; line-height: 1.6; max-width: 700px; margin: 0 auto 28px; }
+.cm-settings { margin: 26px 0; }
+.cm-settings > summary { cursor: pointer; color: var(--green); }
+.cm-outcome { max-width: 800px; margin-left: auto; margin-right: auto; }
+/* SMS is plain text: decisions and confirmation arrive as replies. */
+#sms-demo { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+#sms-demo .cm-phone { width: min(100%, 414px); height: 780px; padding: 10px; margin: 0 auto 24px; border: 1px solid #dedfdf; border-radius: 50px; background: #fcfcfc; box-shadow: 0 12px 36px #163c3414, inset 0 0 0 4px #f0f0f0; }
+#sms-demo .cm-sms-screen { display: flex; flex-direction: column; height: 100%; overflow: hidden; background: white; border: 1px solid #e4e4e4; border-radius: 39px; }
+#sms-demo .cm-sms-statusbar { position: relative; display: flex; justify-content: space-between; align-items: center; padding: 11px 24px 4px; min-height: 35px; flex-shrink: 0; background: #f7f7f8; color: #151515; font-size: 13px; font-weight: 700; }
+#sms-demo .cm-sms-statusbar svg { width: 39px; height: 16px; }
+#sms-demo .cm-sms-notch { position: absolute; width: 40%; height: 24px; left: 30%; top: 0; background: #fcfcfc; border-radius: 0 0 16px 16px; }
+#sms-demo .cm-sms-notch::after { content: ""; position: absolute; top: 8px; left: calc(50% - 24px); width: 48px; height: 4px; border-radius: 5px; background: #e2e2e3; }
+#sms-demo .cm-phone-header { position: relative; display: flex; align-items: center; flex-direction: column; gap: 7px; flex-shrink: 0; padding: 8px 12px 12px; border-bottom: 1px solid #e1e1e4; background: #f7f7f8; }
+#sms-demo .cm-avatar { width: 40px; height: 40px; color: white; background: linear-gradient(#a7aab0, #8a8e95); font-weight: 500; font-size: 23px; }
+#sms-demo .cm-sms-contact { font-size: 12px; color: #171717; font-weight: 500; }
+#sms-demo .cm-sms-contact > span { color: #95979b; margin-left: 3px; }
+#sms-demo .cm-sms-back { position: absolute; left: 16px; top: 12px; text-decoration: none; color: #087ad1; font-size: 40px; line-height: 36px; }
+#sms-demo .cm-sms-thread { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 14px; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #d2d2d7 transparent; }
+#sms-demo .cm-thread-label { font-size: 11px; text-align: center; color: #8b8d91; font-weight: 500; margin: 0 0 18px; }
+#sms-demo .cm-sms-row { display: flex; margin: 0 0 12px; }
+#sms-demo .cm-sms-row.outgoing { justify-content: flex-end; }
+#sms-demo .cm-sms-bubble { max-width: 88%; padding: 10px 13px; border-radius: 18px 18px 18px 5px; background: #e9e9eb; color: #151515; font-size: 14px; font-weight: 400; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+#sms-demo .outgoing .cm-sms-bubble { border-radius: 18px 18px 5px 18px; background: #248a3d; color: white; }
+#sms-demo .cm-sms-composer { display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin: 0; flex-shrink: 0; background: white; }
+#sms-demo .cm-sms-plus { display: grid; place-items: center; border-radius: 50%; background: #f1f1f3; color: #505052; font-size: 24px; width: 29px; height: 29px; flex-shrink: 0; }
+#sms-demo .cm-sms-input { flex: 1; min-width: 0; display: flex; align-items: center; gap: 5px; padding: 4px 4px 4px 12px; border: 1px solid #cdced1; border-radius: 24px; }
+#sms-demo textarea { flex: 1; width: 100%; min-width: 0; min-height: 24px; max-height: 100px; padding: 0; margin: 0; border: 0; border-radius: 0; outline: 0; resize: none; background: transparent; color: #171717; font-family: inherit; font-size: 16px; line-height: 24px; }
+#sms-demo .cm-sms-input:focus-within { outline: 2px solid #248a3d; outline-offset: 1px; }
+#sms-demo .cm-sms-send { display: grid; place-items: center; width: 29px; height: 29px; min-height: 29px; flex-shrink: 0; padding: 4px; border: 0; border-radius: 50%; background: #248a3d; color: white; }
+#sms-demo .cm-sms-send svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+#sms-demo .cm-sms-send:disabled { opacity: .4; }
+#sms-demo .cm-phone-home { display: grid; place-items: center; height: 22px; background: white; flex-shrink: 0; }
+#sms-demo .cm-phone-home span { width: 110px; height: 4px; border-radius: 5px; background: #202020; }
+#sms-demo a:focus-visible, #sms-demo button:focus-visible { outline: 2px solid #087ad1; outline-offset: 2px; }
+.cm-sms-help { max-width: 414px; margin: 0 auto 24px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.cm-sms-processing { text-align: center; color: var(--muted); font-size: 13px; }
+@media (max-width: 1000px) {
+  #email-demo .cm-email-layout { grid-template-columns: 180px minmax(0, 1fr); }
+  #email-demo .cm-email-folders { display: none; }
+}
+@media (max-width: 700px) {
+  #email-demo .cm-monitor-bezel { padding: 18px 6px 0; border-radius: 12px 12px 8px 8px; }
+  #email-demo .cm-monitor-chin { margin: 0 -6px; height: 28px; }
+  #email-demo .cm-email { height: 730px; }
+  #email-demo .cm-email-layout { display: flex; flex-direction: column; }
+  #email-demo .cm-email-list { flex-shrink: 0; border-right: 0; }
+  #email-demo .cm-email-list h2 { padding: 9px 12px; font-size: 13px; }
+  #email-demo .cm-mail-selected { padding: 8px 12px; gap: 3px; font-size: 11px; }
+  #email-demo .cm-mail-selected small, #email-demo .cm-mail-count { display: none; }
+  #email-demo .cm-email-reading { flex: 1; min-height: 0; }
+  #email-demo .cm-email-toolbar { padding: 9px 12px; }
+  #email-demo .cm-mail-account { margin-left: 8px; }
+  #email-demo .cm-window-controls { display: none; }
+  #email-demo .cm-email-heading { padding: 18px 14px 12px; }
+  #email-demo .cm-email-heading h2 { font-size: 17px; }
+  #email-demo .cm-sender { padding: 16px 14px 0; }
+  #email-demo .cm-email-body { padding: 4px 14px 0; }
+  #email-demo .cm-email-hours th, #email-demo .cm-email-hours td { padding: 8px 4px; font-size: 12px; }
+  #email-demo .cm-email-reply-actions { padding: 10px 14px 0; }
+  #email-demo .cm-email-composer, #email-demo .cm-email-thread-message { margin-left: 14px; margin-right: 14px; }
+  #email-demo .cm-monitor-stand { height: 40px; width: 90px; }
+  #email-demo .cm-monitor-foot { width: 180px; }
+}
+@media (max-width: 600px) {
+  .channel-owner-shell { padding: 18px 12px; }
+  .cm-intro { margin-top: 22px; }
+  #sms-demo .cm-phone { height: min(780px, 88svh); min-height: 620px; border-radius: 43px; padding: 7px; }
+  #sms-demo .cm-sms-screen { border-radius: 35px; }
+  #sms-demo .cm-sms-thread { padding-left: 12px; padding-right: 12px; }
+}
