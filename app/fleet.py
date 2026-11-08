@@ -122,7 +122,8 @@ class FleetRunner:
 
     def _scan(self, jid, ids, body):
         started = time.monotonic()
-        # One read-only paginated snapshot, instead of thousands of sequential GETs.
+        # Optimization: Fetch a single paginated bulk snapshot of entity states upfront
+        # rather than performing thousands of individual HTTP GET requests for each business entity.
         snapshot = {e["meta"]["id"]: e for e in self.s.client.list_entities(limit=BATCH_SIZE)}
         counts = {"SUGGEST": 0, "FLAG": 0, "NO_ACTION": 0}
         businesses = {k: set() for k in counts}

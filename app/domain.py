@@ -52,11 +52,17 @@ def _format_interval_end(e: int) -> str:
 
 
 def parse_intervals(spec: str) -> list[tuple[int, int]]:
-    """'closed' -> []. '09:00-17:00' / split / overnight -> [(start,end)] in minutes.
+    """Parses a hours specification string into a list of (start_minutes, end_minutes) tuples.
 
-    Overnight intervals (end <= start, except the 24h form 00:00-23:59) carry an end
-    above 1440. Rejects invalid clock values, zero-length intervals, and intervals that
-    overlap - including the next-date overlap created by an overnight tail.
+    Rules & Edge Cases:
+    - 'closed' or empty string -> []
+    - Standard range '09:00-17:00' -> [(540, 1020)]
+    - Overnight range (e.g., '22:00-02:00'): because end <= start, 1440 minutes (24h) is added
+      to end_minutes -> [(1320, 1560)]. This allows overnight intervals to span across midnight
+      for simple interval math.
+    - 24-hour full day: '00:00-23:59' is treated specially without overnight offset -> [(0, 1439)].
+    - Rejects invalid clock strings, zero-length intervals (e.g. '10:00-10:00'), and any
+      overlapping intervals (including overnight tails wrapping into subsequent times).
     """
     s = (spec or "").strip().lower()
     if s == HOURS_CLOSED:
@@ -644,7 +650,21 @@ def _select_candidate(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
 def evaluate_context(ctx: DetectContext, now: datetime) -> dict:
     """Run Detect + Suggest for one context. Returns a dict with detection / case / proposal parts.
 
-    No source writes, no label/sim access; deterministic for identical inputs.
+    Evaluation Workflow & Priority Hierarchy:
+    1. Permanent Closure Signals: Checks review text / publisher flags. If signals suggest permanent
+       closure, flags status as STATUS_CONCERN for human staff review.
+    2. Already Closed Check: If business is already marked closed, retains current state (NO_ACTION).
+    3. Conflict Detection: If multiple contradictory records exist for the target date, flags an
+       AUTHORITATIVE_CONFLICT for staff review.
+    4. Candidate Evidence Selection Cascade (Section 8 Policy Order):
+       a. Owner confirmation for this exact date (Highest priority)
+       b. Runtime feedback from previous decisions for this date
+       c. Historical pattern for this specific holiday in past seasons
+       d. Shopping centre opening schedule alignment
+       e. Own context pattern / comparable holiday patterns
+       f. Peer benchmark aggregated closed share (Lowest priority)
+    5. Match Check: If candidate hours match currently displayed hours -> RETAIN (NO_ACTION).
+    6. Proposal: Generate SUGGEST proposal with recommended change and priority ranking.
     """
     P10 = POLICY["P10_warning"]
     ev: list[dict] = list(ctx.context_evidence)
