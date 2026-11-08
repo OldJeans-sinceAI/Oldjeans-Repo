@@ -18,6 +18,7 @@ def export_text(data=None, root=None):
 	output_stream = io.StringIO()
 	csv_writer = csv.writer(output_stream)
 	csv_writer.writerow(["entity_id", "date", "action", "hours"])
+	cutoff_dt = parse_dt(POLICY["P14_evaluation"]["cutoff"])
 	with (root_path / "evaluation/targets_2026.csv").open(encoding="utf-8") as file:
 		for row in csv.DictReader(file):
 			context = data.context(
@@ -26,9 +27,7 @@ def export_text(data=None, root=None):
 				row["day_key"],
 				row.get("day_type", "PUBLIC_HOLIDAY"),
 			)
-			result = evaluate_context(
-				context, parse_dt(POLICY["P14_evaluation"]["cutoff"])
-			)
+			result = evaluate_context(context, cutoff_dt)
 			action, change = result["action"], result.get("change")
 			if result.get("purpose") == "OPPORTUNITY":
 				action = "NO_ACTION"
