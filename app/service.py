@@ -1160,13 +1160,13 @@ class Service:
         with self.lock:
             if self.reset_blocked:
                 return
-            from .domain import _tz, dispatch_datetime
+            from .domain import _get_timezone, dispatch_datetime
 
             source_changed = self._refresh_sources()
 
             for eid, last in list(self.store.data.get("watchlist", {}).items()):
                 zone = self._entity(eid).get("timezone", "Europe/Helsinki")
-                local = self.now().astimezone(_tz(zone))
+                local = self.now().astimezone(_get_timezone(zone))
                 if source_changed or (str(local.date()) != last and local.hour >= 9):
                     self.cycle(dict(scope="OPERATIONAL", entity_ids=[eid]))
             for p in self.store.data["proposals"].values():
@@ -1196,7 +1196,7 @@ class Service:
                         zone = self._entity(m["entity_id"]).get(
                             "timezone", "Europe/Helsinki"
                         )
-                        local = self.now().astimezone(_tz(zone))
+                        local = self.now().astimezone(_get_timezone(zone))
                         window = pref["best_contact_window"]
                         start, end = map(int, window.split("-"))
                         if local.hour < start:
