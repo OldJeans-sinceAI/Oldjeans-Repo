@@ -8,12 +8,8 @@ from .teammate.reply_engine import ReplyEngine, DEFAULT_MODEL
 
 class OwnerReplies:
     def __init__(self, engine=None):
-        self.engine = engine or ReplyEngine(
-            os.getenv("GEMINI_API_KEY", "")
-            if os.getenv("GEMINI_ENABLED", "true").lower() == "true"
-            else "",
-            os.getenv("GEMINI_MODEL", DEFAULT_MODEL),
-        )
+        key = os.getenv("GEMINI_API_KEY", "") if os.getenv("GEMINI_ENABLED", "true").lower() == "true" else ""
+        self.engine = engine or ReplyEngine(key, os.getenv("GEMINI_MODEL", DEFAULT_MODEL))
 
     def health(self):
         return {
@@ -103,11 +99,7 @@ class OwnerReplies:
                 "missing_fields": [],
                 "interpretation": meta,
             }
-        missing = (
-            ["reopen_date"]
-            if proposal["change"]["kind"] == "REOPEN_DATE"
-            else ["hours"]
-        )
+        missing = ["reopen_date"] if proposal["change"]["kind"] == "REOPEN_DATE" else ["hours"]
         d = _needs("Confirm the exact change using the editor.", missing)
         target = proposal["change"].get("date")
         mentioned = re.findall(r"\d{4}-\d{2}-\d{2}", text)
@@ -119,9 +111,7 @@ class OwnerReplies:
         ):
             return {**d, "interpretation": meta}
         if reply.intent in ("APPLY", "REJECT"):
-            if reply.hours or (
-                multiple and reply.intent == "APPLY" and target not in mentioned
-            ):
+            if reply.hours or (multiple and reply.intent == "APPLY" and target not in mentioned):
                 return {
                     **_needs("Choose the date this reply applies to.", ["date"]),
                     "interpretation": meta,
@@ -137,12 +127,7 @@ class OwnerReplies:
                 },
                 "missing_fields": [],
             }
-        elif (
-            reply.intent == "EDIT"
-            and target
-            and proposal["change"]["kind"] == "DATE_HOURS"
-            and reply.hours
-        ):
+        elif reply.intent == "EDIT" and target and proposal["change"]["kind"] == "DATE_HOURS" and reply.hours:
             try:
                 hours = canonical_hours(reply.hours)
                 d = _ready_edit(

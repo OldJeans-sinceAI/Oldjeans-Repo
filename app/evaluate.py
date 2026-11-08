@@ -8,35 +8,19 @@ from . import POLICY
 
 def export_text(data=None, root=None):
     root = Path(root or Path(__file__).resolve().parents[1])
-    data = (
-        data
-        if data is not None and data.cutoff == POLICY["P14_evaluation"]["cutoff"]
-        else DataStore(str(root / "data"), POLICY["P14_evaluation"]["cutoff"])
-    )
+    data = data if data is not None and data.cutoff == POLICY["P14_evaluation"]["cutoff"] else DataStore(str(root / "data"), POLICY["P14_evaluation"]["cutoff"])
     stream = io.StringIO()
     writer = csv.writer(stream)
     writer.writerow(["entity_id", "date", "action", "hours"])
     with (root / "evaluation/targets_2026.csv").open() as f:
         for row in csv.DictReader(f):
-            ctx = data.context(
-                row["entity_id"],
-                row["date"],
-                row["day_key"],
-                row.get("day_type", "PUBLIC_HOLIDAY"),
-            )
+            ctx = data.context(row["entity_id"], row["date"], row["day_key"], row.get("day_type", "PUBLIC_HOLIDAY"))
             out = evaluate_context(ctx, parse_dt(POLICY["P14_evaluation"]["cutoff"]))
             action = out["action"]
             change = out.get("change")
             if out.get("purpose") == "OPPORTUNITY":
                 action = "NO_ACTION"
-            writer.writerow(
-                [
-                    row["entity_id"],
-                    row["date"],
-                    action,
-                    change["hours"] if action == "SUGGEST" else "",
-                ]
-            )
+            writer.writerow([row["entity_id"], row["date"], action, change["hours"] if action == "SUGGEST" else ""])
     return stream.getvalue()
 
 
