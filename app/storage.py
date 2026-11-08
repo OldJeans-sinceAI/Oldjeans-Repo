@@ -17,14 +17,14 @@ class StateError(RuntimeError):
  """Raised when state cannot be loaded (corruption) or safely persisted."""
 
 
-_C = ("cases", "proposals", "messages", "decisions", "operations", "issues", "preferences", "permissions", "jobs")
-_M = ("idempotency", "owner_tokens", "operator_sessions", "owner_sessions", "detections")
+_COLLECTIONS = ("cases", "proposals", "messages", "decisions", "operations", "issues", "preferences", "permissions", "jobs")
+_MAPS = ("idempotency", "owner_tokens", "operator_sessions", "owner_sessions", "detections")
 
 
 def _empty_state() -> dict:
  d: dict[str, Any] = {"schema_version": SCHEMA_VERSION, "policy_version": POLICY["version"], "counters": {}, "server_secret": None}
- for c in _C: d[c] = {}
- for m in _M: d[m] = {}
+ for c in _COLLECTIONS: d[c] = {}
+ for m in _MAPS: d[m] = {}
  return d
 
 
@@ -50,10 +50,10 @@ class StateStore:
    raise StateError(f"state file {self.path} is corrupt and was NOT reset: {e}. Inspect it or restore {self.bak}.") from None
   if not isinstance(d, dict) or d.get("schema_version") != SCHEMA_VERSION:
    raise StateError(f"state file {self.path} has an unexpected schema_version {d.get('schema_version') if isinstance(d, dict) else '?'}; not reset.")
-  for c in _C:
+  for c in _COLLECTIONS:
    d.setdefault(c, {})
    if not isinstance(d[c], dict): raise StateError("Invalid state collection: " + c)
-  for m in _M:
+  for m in _MAPS:
    d.setdefault(m, {})
    if not isinstance(d[m], dict): raise StateError("Invalid state map: " + m)
   d.setdefault("counters", {})

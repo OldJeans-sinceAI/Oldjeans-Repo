@@ -31,11 +31,11 @@ class HoursError(ValueError):
 _TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
-def _t2m(t: str) -> int:
+def _time_to_minutes(t: str) -> int:
     return int(t[:2]) * 60 + int(t[3:])
 
 
-def _m2t(m: int) -> str:
+def _minutes_to_time(m: int) -> str:
     m %= 1440
     return f"{m // 60:02d}:{m % 60:02d}"
 
@@ -60,7 +60,7 @@ def parse_intervals(spec: str) -> list[tuple[int, int]]:
         a, b = part.split("-", 1)
         if not (_TIME_RE.match(a) and _TIME_RE.match(b)):
             raise HoursError(f"interval {part!r} has an invalid clock value")
-        sm, em = _t2m(a), _t2m(b)
+        sm, em = _time_to_minutes(a), _time_to_minutes(b)
         if sm == em:
             raise HoursError(
                 f"interval {part!r} is zero length; use 00:00-23:59 for 24 hours"
@@ -88,8 +88,8 @@ def canonical_hours(spec: str) -> str:
         return "closed"
     parts = []
     for s, e in sorted(ivs):
-        end = "23:59" if e == 1439 else _m2t(e)
-        parts.append(f"{_m2t(s)}-{end}")
+        end = "23:59" if e == 1439 else _minutes_to_time(e)
+        parts.append(f"{_minutes_to_time(s)}-{end}")
     return ",".join(parts)
 
 
@@ -111,7 +111,7 @@ def hours_string_to_day(spec: str) -> dict:
         return {"isClosed": True}
     return {
         "openIntervals": [
-            {"start": _m2t(s), "end": "23:59" if e == 1439 else _m2t(e)} for s, e in ivs
+            {"start": _minutes_to_time(s), "end": "23:59" if e == 1439 else _minutes_to_time(e)} for s, e in ivs
         ]
     }
 
@@ -239,7 +239,7 @@ def iso_utc(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _tz(name: str):
+def _get_timezone(name: str):
     try:
         from zoneinfo import ZoneInfo
 
@@ -250,12 +250,12 @@ def _tz(name: str):
 
 
 def local_date(now: datetime, tzname: str) -> date:
-    return now.astimezone(_tz(tzname)).date()
+    return now.astimezone(_get_timezone(tzname)).date()
 
 
 def local_midnight_utc(d: date, tzname: str) -> datetime:
     naive = datetime(d.year, d.month, d.day, 0, 0, 0)
-    return naive.replace(tzinfo=_tz(tzname)).astimezone(timezone.utc)
+    return naive.replace(tzinfo=_get_timezone(tzname)).astimezone(timezone.utc)
 
 
 # ------------------------------------------------------------------- scheduling
@@ -283,7 +283,7 @@ def detection_horizon(now_local: date, frequency: str, buffer_days: int = 2) -> 
 
 def dispatch_datetime(d: date, window: str, tzname: str) -> datetime:
     naive = datetime(d.year, d.month, d.day, window_start_hour(window), 0, 0)
-    return naive.replace(tzinfo=_tz(tzname)).astimezone(timezone.utc)
+    return naive.replace(tzinfo=_get_timezone(tzname)).astimezone(timezone.utc)
 
 
 def compute_next_contact_at(
@@ -364,7 +364,7 @@ def _days_until(target: str, now: datetime, tzname: str) -> int:
 
 
 def _evidence(
-    ev_id,
+    evidence_id,
     source_file,
     source_record,
     role,
@@ -373,7 +373,7 @@ def _evidence(
     applicable_date=None,
 ) -> dict:
     out = {
-        "evidence_id": ev_id,
+        "evidence_id": evidence_id,
         "source_file": source_file,
         "source_record": source_record,
         "role": role,
