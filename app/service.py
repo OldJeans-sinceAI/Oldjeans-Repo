@@ -22,10 +22,20 @@ from .domain import (
     canonical_hours,
     day_to_hours_string,
     DAYS,
+    MINUTES_PER_DAY,
     _get_timezone,
     dispatch_datetime,
     is_proposal_active,
 )
+
+DEFAULT_YEXT_API_VERSION = "20261106"
+DEFAULT_TIMEZONE = "Europe/Helsinki"
+DEFAULT_CONTACT_WINDOW = "10-12"
+DEFAULT_FREQUENCY = "TWICE_MONTHLY"
+MAX_IDEMPOTENCY_KEY_LENGTH = 200
+PROPOSAL_TTL_DAYS = 14
+PERMISSION_MAX_TTL_DAYS = 365
+SANDBOX_HOST_DOMAIN = "sbx-api.yextapis.com"
 from .storage import StateStore
 from .replies import OwnerReplies
 from examples.yext_client import YextClient
@@ -44,7 +54,7 @@ class AppError(Exception):
 
 
 def check_idempotency_key(key: str | None) -> None:
-    if not key or len(key) > 200:
+    if not key or len(key) > MAX_IDEMPOTENCY_KEY_LENGTH:
         raise AppError(
             400, "IDEMPOTENCY_KEY_REQUIRED", "A valid Idempotency-Key is required."
         )
@@ -115,7 +125,7 @@ class Service:
         self.lock = self.store.lock
         self.reset_blocked = False
         self.client = client or YextClient(
-            v=os.environ.get("YEXT_API_VERSION", "20261106")
+            v=os.environ.get("YEXT_API_VERSION", DEFAULT_YEXT_API_VERSION)
         )
         self.source_id = source_id or os.getenv("SANDBOX_SOURCE_ENTITY_ID", "")
         self.target_id = target_id or os.getenv("YEXT_ENTITY_ID", "")
@@ -141,7 +151,7 @@ class Service:
 
             if (
                 client is None
-                and urlparse(self.client.base).hostname != "sbx-api.yextapis.com"
+                and urlparse(self.client.base).hostname != SANDBOX_HOST_DOMAIN
             ):
                 raise AppError(
                     503,
@@ -232,7 +242,7 @@ class Service:
         return e
 
     def _timezone(self, eid):
-        return self._entity(eid).get("timezone", "Europe/Helsinki")
+        return self._entity(eid).get("timezone", DEFAULT_TIMEZONE)
 
     def target(self, eid):
         if self.mode == "sandbox":
@@ -340,7 +350,7 @@ class Service:
         e = self._entity(eid)
         c = self.data.contact(eid)
         saved = self.store.data["preferences"].get(eid, {})
-        freq = saved.get("frequency", "TWICE_MONTHLY")
+        freq = saved.get("frequency", DEFAULT_FREQUENCY)
         opt = c.get("opted_out_of_suggestions") == "1"
         return dict(
             entity_id=eid,
@@ -349,14 +359,14 @@ class Service:
             source=saved.get("source", "DEFAULT"),
             preferred_channel=c.get("preferred_channel", "EMAIL"),
             preferred_language=c.get("preferred_language", "en"),
-            best_contact_window=c.get("best_contact_window", "10-12"),
+            best_contact_window=c.get("best_contact_window", DEFAULT_CONTACT_WINDOW),
             source_opted_out=opt,
             next_contact_at=None
             if opt
             else compute_next_contact_at(
                 self.now(),
                 self._timezone(eid),
-                c.get("best_contact_window", "10-12"),
+                c.get("best_contact_window", DEFAULT_CONTACT_WINDOW),
                 freq,
             ),
             updated_at=saved.get("updated_at", self.stamp()),
@@ -394,7 +404,7 @@ class Service:
 
     def create_permission(self, eid, b):
         exp = parse_dt(b["expires_at"])
-        if not self.now() < exp <= self.now() + timedelta(days=365):
+        if not self.now() < exp <= self.now() + timedelta(days=PERMISSION_MAX_TTL_DAYS):
             raise AppError(
                 422, "INVALID_EXPIRY", "Permission must expire within 365 days."
             )
@@ -646,7 +656,7 @@ class Service:
                 pid = self.store.next_id("proposal")
                 tz = d["timezone"]
                 end = min(
-                    self.now() + timedelta(days=14),
+                    self.now() + timedelta(days=PROPOSAL_TTL_DAYS),
                     local_midnight_utc(date.fromisoformat(day), tz),
                 )
                 baseline = copy.deepcopy(d["baseline"])
@@ -1059,7 +1069,7 @@ class Service:
                 if (
                     first
                     and nxt
-                    and max(b for _, b in first) > 1440 + min(a for a, _ in nxt)
+                    and max(b for _, b in first) > MINUTES_PER_DAY + min(a for a, _ in nxt)
                 ):
                     raise AppError(
                         422,
@@ -1075,7 +1085,7 @@ class Service:
                     continue
                 a = parse_intervals(day_to_hours_string(merged.get(d)))
                 b = parse_intervals(day_to_hours_string(merged.get(DAYS[(i + 1) % 7])))
-                if a and b and max(e for _, e in a) > 1440 + min(s for s, _ in b):
+                if a and b and max(e for _, e in a) > MINUTES_PER_DAY + min(s for s, _ in b):
                     raise AppError(
                         422, "OVERNIGHT_OVERLAP", "Weekly hours overlap the next day."
                     )

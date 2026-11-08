@@ -10,6 +10,9 @@ from .service import AppError
 from .domain import parse_dt, is_proposal_active
 
 
+BATCH_SIZE = 100
+
+
 class FleetRunner:
     def __init__(self, service):
         self.service = service
@@ -120,18 +123,18 @@ class FleetRunner:
     def _scan(self, jid, ids, body):
         started = time.monotonic()
         # One read-only paginated snapshot, instead of thousands of sequential GETs.
-        snapshot = {e["meta"]["id"]: e for e in self.s.client.list_entities(limit=100)}
+        snapshot = {e["meta"]["id"]: e for e in self.s.client.list_entities(limit=BATCH_SIZE)}
         counts = {"SUGGEST": 0, "FLAG": 0, "NO_ACTION": 0}
         businesses = {k: set() for k in counts}
         case_ids = []
         errors = []
         processed = 0
         failed = 0
-        for start in range(0, len(ids), 100):
+        for start in range(0, len(ids), BATCH_SIZE):
             if self.stop.is_set():
                 self._update(jid, status="INTERRUPTED")
                 return
-            batch = ids[start : start + 100]
+            batch = ids[start : start + BATCH_SIZE]
             valid = [eid for eid in batch if eid in snapshot]
             for eid in batch:
                 if eid not in snapshot:
@@ -173,7 +176,7 @@ class FleetRunner:
                 business_counts={k: len(v) for k, v in businesses.items()},
                 ready_proposals=len(ready),
                 ready_businesses=len({p["entity_id"] for p in ready}),
-                errors=errors[:100],
+                errors=errors[:BATCH_SIZE],
                 _case_ids=case_ids,
                 elapsed_seconds=round(time.monotonic() - started, 1),
             )
@@ -226,12 +229,12 @@ class FleetRunner:
         message_ids = []
         done = 0
         entries = list(groups.items())
-        for start in range(0, len(entries), 100):
+        for start in range(0, len(entries), BATCH_SIZE):
             if self.stop.is_set():
                 self._update(jid, contact_status="INTERRUPTED")
                 return
             with self.s.lock:
-                for eid, pids in entries[start : start + 100]:
+                for eid, pids in entries[start : start + BATCH_SIZE]:
                     # Revalidate proposals inside create_message; honor opt-out/pause.
                     try:
                         m = self.s.create_message(
