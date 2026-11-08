@@ -163,10 +163,11 @@ class FleetRunner:
             processed += len(batch)
             ready = []
             with self.s.lock:
+                now = self.s.now()
                 for cid in case_ids:
                     c = self.s.store.get("cases", cid)
                     p = self.s.store.get("proposals", c.get("proposal_id", ""))
-                    if p and is_proposal_active(p, self.s.now()):
+                    if p and is_proposal_active(p, now):
                         ready.append(p)
             self._update(
                 jid,

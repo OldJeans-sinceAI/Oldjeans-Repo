@@ -8,6 +8,7 @@ and which tests build directly to isolate a single acceptance scenario.
 
 from __future__ import annotations
 
+import copy
 import csv
 import hashlib
 import json
@@ -15,6 +16,7 @@ import os
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 from math import atan2, cos, radians, sin, sqrt
 from typing import Optional
 
@@ -99,6 +101,7 @@ def validate_hours(spec: str) -> str:
     return canonical_hours(spec) if ivs else "closed"
 
 
+@lru_cache(maxsize=2048)
 def canonical_hours(spec: str) -> str:
     ivs = parse_intervals(spec)
     if not ivs:
@@ -148,6 +151,7 @@ def relevant_state_hash(value: str) -> str:
     )
 
 
+@lru_cache(maxsize=2048)
 def canonical_hours_or_raw(value: str) -> str:
     try:
         return canonical_hours(value)
@@ -164,7 +168,7 @@ def merge_change_into_hours(current_hours: dict, change: dict) -> dict:
     DATE_HOURS upserts one holidayHours date; WEEKLY_HOURS replaces only named weekdays;
     REOPEN_DATE sets only hours.reopenDate. Everything else is preserved verbatim.
     """
-    hours = json.loads(json.dumps(current_hours or {}))
+    hours = copy.deepcopy(current_hours or {})
     kind = change["kind"]
     if kind == "DATE_HOURS":
         d = change["date"]
@@ -244,6 +248,7 @@ def validate_change(change: dict) -> dict:
 _WINTER_OFFSETS = {"Europe/Helsinki": 2, "Europe/Stockholm": 1, "Europe/Oslo": 1}
 
 
+@lru_cache(maxsize=2048)
 def parse_dt(value: str) -> datetime:
     v = value.strip()
     if v.endswith("Z"):
@@ -270,6 +275,7 @@ def is_proposal_active(p: dict, now: datetime) -> bool:
     return p.get("decision_status") == "PENDING" and parse_dt(p["expires_at"]) > now
 
 
+@lru_cache(maxsize=64)
 def _get_timezone(name: str):
     try:
         from zoneinfo import ZoneInfo
@@ -1366,13 +1372,14 @@ class DataStore:
             x for x in self.dates_by_key.get((country, day_key), []) if x < target
         ]
         for pd in sorted(set(prior_dates), reverse=True):
+            pd_date = date.fromisoformat(pd)
             if (
                 not 0
-                <= d.year - date.fromisoformat(pd).year
+                <= d.year - pd_date.year
                 <= POLICY["P09_evidence"]["history_seasons"]
             ):
                 continue
-            val = self.holiday_entry(eid, date.fromisoformat(pd), self.cutoff_dt)
+            val = self.holiday_entry(eid, pd_date, self.cutoff_dt)
             if val:
                 val = self.regular_hours(eid, d) if val == "REGULAR" else val
                 rows = [
@@ -1493,18 +1500,21 @@ class DataStore:
         ctx.owner_permanent_closure = any(x.get("owner") for x in ctx.closure_signals)
         target_cal = self.cal_by_date.get((country, target), {})
         for hd, rows in self.holiday_by_entity.get(eid, []):
-            if hd >= target or d.year - date.fromisoformat(hd).year > 3:
+            if hd >= target:
+                continue
+            hd_date = date.fromisoformat(hd)
+            if d.year - hd_date.year > 3:
                 continue
             cal = self.cal_by_date.get((country, hd), {})
             if (
                 not target_cal.get("day_class")
                 or cal.get("day_class") != target_cal["day_class"]
-                or (date.fromisoformat(hd).weekday() >= 5) != (d.weekday() >= 5)
+                or (hd_date.weekday() >= 5) != (d.weekday() >= 5)
             ):
                 continue
             if not self.same_week(eid, hd, target):
                 continue
-            val = self.holiday_entry(eid, date.fromisoformat(hd), self.cutoff_dt)
+            val = self.holiday_entry(eid, hd_date, self.cutoff_dt)
             eligible = [r for r in rows if parse_dt(r["entered_at"]) < self.cutoff_dt]
             if val and val != "REGULAR" and eligible:
                 ctx.comparable.append(
@@ -1533,8 +1543,9 @@ class DataStore:
         for pd in self.dates_by_key.get((country, day_key), []):
             if pd >= self.cutoff[:10]:
                 continue
-            m = self.holiday_entry(mall, date.fromisoformat(pd), self.cutoff_dt)
-            o = self.holiday_entry(eid, date.fromisoformat(pd), self.cutoff_dt)
+            pd_date = date.fromisoformat(pd)
+            m = self.holiday_entry(mall, pd_date, self.cutoff_dt)
+            o = self.holiday_entry(eid, pd_date, self.cutoff_dt)
             if m and m != "REGULAR" and o and o != "REGULAR":
                 total += 1
                 if hours_equal(m, o):
@@ -1555,6 +1566,8 @@ class DataStore:
         target_hours = self._effective_regular_hours_dict(
             eid, min(target, limit), inclusive=True
         )
+        if old_hours == target_hours:
+            return True
         return all(
             day_to_hours_string(old_hours.get(w))
             == day_to_hours_string(target_hours.get(w))
@@ -1575,11 +1588,7 @@ class DataStore:
 
         if ctx.segment in ("restaurant", "lunch_restaurant", "pizzeria", "bar_pub"):
             for event in self.events_by_day.get((ctx.country, ctx.target_date), []):
-                if (
-                    event.get("start_time", "")[:10] == ctx.target_date
-                    and event.get("x_country") == ctx.country
-                    and nearby(event)
-                ):
+                if nearby(event):
                     self.event_pattern(ctx, e, event, nearby)
                     ctx.context_evidence.append(
                         _evidence(
@@ -1711,17 +1720,19 @@ class DataStore:
             return
         if ctx.entity_id not in self._neighbour_ids:
             found = []
+            lat1, lon1 = coord["latitude"], coord["longitude"]
             for eid, other in self.entities.items():
-                point = other.get("geocodedCoordinate", {})
                 if (
                     eid == ctx.entity_id
                     or other.get("c_segment") != ctx.segment
                     or other.get("meta", {}).get("countryCode") != ctx.country
-                    or not all(k in point for k in ("latitude", "longitude"))
                 ):
                     continue
+                point = other.get("geocodedCoordinate", {})
+                if not all(k in point for k in ("latitude", "longitude")):
+                    continue
                 distance = haversine_distance(
-                    coord["latitude"], coord["longitude"], point["latitude"], point["longitude"]
+                    lat1, lon1, point["latitude"], point["longitude"]
                 )
                 if distance <= 1000:
                     found.append((distance, eid))
