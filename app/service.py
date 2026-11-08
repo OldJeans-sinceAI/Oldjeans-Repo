@@ -22,6 +22,9 @@ from .domain import (
     canonical_hours,
     day_to_hours_string,
     DAYS,
+    _get_timezone,
+    dispatch_datetime,
+    is_proposal_active,
 )
 from .storage import StateStore
 from .replies import OwnerReplies
@@ -556,8 +559,7 @@ class Service:
                 if (
                     apply_permissions
                     and p
-                    and p["decision_status"] == "PENDING"
-                    and parse_dt(p["expires_at"]) > self.now()
+                    and is_proposal_active(p, self.now())
                     and self.matching_permission(p)
                 ):
                     permission = self.matching_permission(p)
@@ -1175,8 +1177,6 @@ class Service:
         with self.lock:
             if self.reset_blocked:
                 return
-            from .domain import _get_timezone, dispatch_datetime
-
             source_changed = self._refresh_sources()
 
             for eid, last in list(self.store.data.get("watchlist", {}).items()):
@@ -1204,7 +1204,6 @@ class Service:
             or parse_dt(m["scheduled_at"]) > self.now()
         ):
             return
-        from .domain import _get_timezone, dispatch_datetime
         pref = self.preferences(m["entity_id"])
         if pref["source_opted_out"]:
             m["status"] = "BLOCKED_OPT_OUT"
@@ -1430,11 +1429,7 @@ class Service:
                 raise AppError(
                     403, "CROSS_ENTITY", "Message scope does not match the business."
                 )
-            if any(
-                p["decision_status"] != "PENDING"
-                or parse_dt(p["expires_at"]) <= self.now()
-                for p in ps
-            ):
+            if any(not is_proposal_active(p, self.now()) for p in ps):
                 raise AppError(
                     410,
                     "PROPOSAL_EXPIRED",

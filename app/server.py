@@ -76,6 +76,22 @@ class Handler(BaseHTTPRequestHandler):
         names = ("operator_session", "owner_session", "csrf_token")
         return {k: c[prefix + k].value for k in names if prefix + k in c}
 
+    def _reply_error(
+        self, status, code, message, retryable=False, details=None
+    ):
+        self.reply(
+            status,
+            {
+                "error": {
+                    "code": code,
+                    "message": message,
+                    "retryable": retryable,
+                    "details": details or {},
+                },
+                "request_id": secrets.token_hex(8),
+            },
+        )
+
     def reply(
         self, status, data, headers=None, content_type="application/json; charset=utf-8"
     ):
@@ -129,57 +145,22 @@ class Handler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
         except AppError as e:
-            self.reply(
-                e.status,
-                {
-                    "error": {
-                        "code": e.code,
-                        "message": e.message,
-                        "retryable": e.retryable,
-                        "details": e.details,
-                    },
-                    "request_id": secrets.token_hex(8),
-                },
-            )
+            self._reply_error(e.status, e.code, e.message, e.retryable, e.details)
         except (HoursError, ValueError, KeyError, TypeError):
-            self.reply(
-                422,
-                {
-                    "error": {
-                        "code": "INVALID_VALUE",
-                        "message": "Invalid hours, date or request value.",
-                        "retryable": False,
-                        "details": {},
-                    },
-                    "request_id": secrets.token_hex(8),
-                },
+            self._reply_error(
+                422, "INVALID_VALUE", "Invalid hours, date or request value."
             )
         except (StateError, OSError):
-            self.reply(
+            self._reply_error(
                 503,
-                {
-                    "error": {
-                        "code": "STORAGE_UNAVAILABLE",
-                        "message": "State could not be persisted. Do not assume the change succeeded.",
-                        "retryable": True,
-                        "details": {},
-                    },
-                    "request_id": secrets.token_hex(8),
-                },
+                "STORAGE_UNAVAILABLE",
+                "State could not be persisted. Do not assume the change succeeded.",
+                True,
             )
         except Exception as e:
             print("Request failed:", type(e).__name__, flush=True)
-            self.reply(
-                500,
-                {
-                    "error": {
-                        "code": "INTERNAL_ERROR",
-                        "message": "The request could not be completed.",
-                        "retryable": False,
-                        "details": {},
-                    },
-                    "request_id": secrets.token_hex(8),
-                },
+            self._reply_error(
+                500, "INTERNAL_ERROR", "The request could not be completed."
             )
 
     def dispatch(self, method):
