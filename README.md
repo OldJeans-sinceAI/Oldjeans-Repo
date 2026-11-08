@@ -61,6 +61,18 @@ you never need to try every outcome on a single proposal. The final summary refl
 your choices. Reloading an undecided screen does not approve or replay any reply;
 unsent text and unconfirmed previews must be entered again.
 
+**Back to Detect** returns to the existing scan without resetting any saved
+decisions or sending a message. At Detect, select one of the three prepared
+businesses and press Next; a completed business opens its saved result. Next then
+visits the remaining businesses. **Restart demo · resets data** is separate and
+asks before clearing the rehearsal. Unconfirmed drafts are discarded when leaving
+the customer screen. Navigation waits for any reply or decision already in flight.
+
+Only step 4 embeds the phone/monitor customer views. Other steps remain in the
+same Next-button presentation. For other businesses, dates and staff-review tests,
+open **More tests · advanced workspace** at Detect; this is the manual workspace,
+not another required part of the presentation.
+
 Contact is simulated. Decisions and read-back use the real application APIs against
 the local Yext mock. Failed or unverified updates never display a successful result.
 
@@ -90,7 +102,12 @@ With those credentials configured, run:
 ```
 
 This keeps the guided mock presentation at `/` and the manual real-Yext workspace
-at `/sandbox/`. The presentation never approves a sandbox update.
+at `/sandbox/`. **Test real Yext apply** in the presentation header and result page
+opens the sandbox in a separate tab, preserving the current rehearsal. The sandbox
+shows the actual target, an explicit owner approval, and independent read-back;
+its return link leads back to the demo. The presentation never approves a sandbox
+update. Without a configured sandbox, the demo explains this and shows no live-test
+link.
 
 ## Build status (scope of this document)
 

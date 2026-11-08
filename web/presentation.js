@@ -22,6 +22,52 @@ function savePresentation() {
 function presentationStep() {
   return {start: 1, scan: 1, suggest: 2, contact: 3, decide: 4, result: 5, complete: 5}[presentation.phase] || 1;
 }
+function presentationNavigationBusy() {
+  // Owner handlers keep these controls/sets busy until their refresh finishes.
+  // Back/restart must not change the active owner while a decision is in flight.
+  return presentation.busy || Object.values(state.replyBusy).some(Boolean) ||
+    emailSending.size > 0 || smsSending.size > 0 || !!document.querySelector(
+      '.pt-owner-view [data-decision]:disabled, .pt-owner-view [data-draft]:disabled, dialog[open] [data-confirm-edit]:disabled'
+    );
+}
+function presentationNextChapter() {
+  const current = presentation.chapter;
+  return [...PRESENTATION_CHAPTERS.keys()].filter(i => i > current)
+    .concat([...PRESENTATION_CHAPTERS.keys()].filter(i => i < current))
+    .find(i => !presentation.outcomes[i]);
+}
+function clearPresentationDrafts() {
+  state.drafts = {}; state.replyText = {}; state.editing = null;
+  emailComposers.clear(); emailConversations.clear(); emailConfirmations.clear();
+  smsComposers.clear(); smsConversations.clear(); smsConfirmations.clear();
+  if (dialog.open) dialog.close();
+}
+function backToPresentationDetect(chapter = presentation.chapter) {
+  if (!presentationActive() || !presentation.ready || presentationNavigationBusy()) return;
+  if (!Number.isInteger(chapter) || chapter < 0 || chapter >= PRESENTATION_CHAPTERS.length) return;
+  clearPresentationDrafts();
+  Object.assign(presentation, {phase: presentation.runId ? "scan" : "start", chapter,
+    proposal: null, message: null, result: null, error: ""});
+  state.proposals = [];
+  savePresentation(); renderPresentation(); window.scrollTo({top:0,behavior:"instant"});
+  if (presentation.run?.status === "RUNNING") void presentationPollScan();
+}
+function requestPresentationRestart() {
+  if (!presentationActive() || !presentation.ready || presentationNavigationBusy() || presentation.run?.status === "RUNNING") return;
+  dialog.innerHTML = '<div class="modal-head"><h2>Start a fresh rehearsal?</h2><button class="ghost" data-close aria-label="Close">✕</button></div><p>This restores the presentation mock data and clears its decisions, messages and scan. It does not reset the real Yext sandbox.</p><p>To review another business while keeping your results, use Back to Detect.</p><div class="actions"><button class="primary" data-presentation-reset-confirm>Reset demo & start again</button><button data-close>Keep this rehearsal</button></div>';
+  dialog.showModal();
+}
+function presentationYextView() {
+  return `<aside class="pt-yext" aria-label="Yext integration"><div><strong>Where does Yext fit?</strong><p>This rehearsal saves to a local Yext simulator and verifies the result. The real-write test uses the team's Yext sandbox entity: owner approval → save → independent read-back.</p></div>${state.health?.sandbox_available ? '<a class="button-link" data-presentation-yext href="/sandbox/" target="_blank" rel="noopener">Test real Yext apply ↗</a>' : '<span class="pt-muted">Real Yext sandbox is not connected in this launch.</span>'}</aside>`;
+}
+function presentationPickerView() {
+  const d = presentation;
+  if (d.run?.status !== "COMPLETED" || d.run.failed_businesses) return "";
+  return `<section class="pt-panel pt-picker"><p class="pt-small-label">CONTINUE FROM THIS SCAN</p><h2>Choose a business, then press Next.</h2><p>Use the suggested order, or choose another channel to test. Existing decisions stay saved. A business already decided opens its recorded result; use Restart demo to try a different decision for it.</p><div class="pt-business-options">${PRESENTATION_CHAPTERS.map((c,i) => {
+    const item = d.cases.find(x => x.entity_id === c.entity && x.target_date === PRESENTATION_DATE);
+    return `<button data-presentation-chapter-pick="${i}" aria-pressed="${i === d.chapter}" ${d.busy ? "disabled" : ""}><span>${c.channel === "WHATSAPP" ? "WhatsApp" : c.channel}</span><strong>${h(item?.business_name || c.entity)}</strong><small>${d.outcomes[i] ? "Result saved" : i === d.chapter ? "Selected for Next" : "Choose this business"}</small></button>`;
+  }).join("")}</div><details class="pt-more-tests"><summary>More tests · advanced workspace</summary><p>For other businesses, dates, staff review and contact settings, use the manual workspace. The Next-button demo stays here.</p><a href="/?view=workspace" target="_blank" rel="noopener">Open advanced tests ↗</a></details></section>`;
+}
 function presentationVerified(p, r, chapter = presentation.chapter) {
   const c = PRESENTATION_CHAPTERS[chapter];
   if (!p || !r || p.entity_id !== c.entity || p.change.date !== PRESENTATION_DATE || p.mode !== "mock" ||
@@ -59,7 +105,7 @@ function presentationNextText() {
     suggest: `Prepare the ${chapter.channel === "WHATSAPP" ? "WhatsApp" : chapter.channel} message.`,
     contact: "Open the message as the simulated business owner.",
     decide: "Use the customer screen above. Your confirmed decision opens step 5 automatically.",
-    result: d.chapter < 2 ? "Continue with the next channel and owner decision." : "Show what this complete workflow achieved.",
+    result: presentationNextChapter() !== undefined ? "Continue with the next business that needs a review." : "Show what this complete workflow achieved.",
     complete: "Start a fresh rehearsal. Only presentation data will be reset.",
   }[d.phase];
 }
@@ -111,7 +157,7 @@ function renderPresentation() {
   if (d.phase === "result") presentationRememberResult();
   const outcome = journeyOutcome(d.proposal,d.result);
   let body = "";
-  if (["start","scan"].includes(d.phase)) body = presentationScanView();
+  if (["start","scan"].includes(d.phase)) body = presentationScanView() + presentationPickerView();
   else if (d.phase !== "complete" && (!d.proposal || d.proposal.entity_id !== c.entity)) body = '<section class="pt-panel"><h1>The rehearsal needs a fresh start.</h1><p>No application result has been assumed.</p></section>';
   else if (d.phase === "suggest") body = presentationProposalView();
   else if (d.phase === "contact") body = presentationContactView();
@@ -122,7 +168,7 @@ function renderPresentation() {
     ? '<span class="pt-owner-status" role="status">Your choice in the message ↑</span>'
     : `<button class="primary pt-next" data-presentation-next ${presentationCanAdvance() ? "" : "disabled"}>${d.busy ? '<span class="spinner"></span> Please wait' : d.phase === "complete" ? "Restart demo ↻" : "Next →"}</button>`;
   const completeOutcome = d.outcomes.some(r => r && r.status !== "REJECTED") ? "APPLIED" : "REJECTED";
-  app.innerHTML = `<main class="pt-shell"><header class="pt-header">${brand()}<div class="pt-header-right"><span class="pt-demo-badge">INTERACTIVE DEMO · MOCK DATA</span><a href="/?view=workspace">Explore workspace ↗</a></div></header><div class="pt-context"><span>CHRISTMAS EVE · 24 DEC 2026</span><span>${["start","scan"].includes(d.phase) ? "ALL BUSINESSES" : d.phase === "complete" ? "REHEARSAL COMPLETE" : `CHAPTER ${d.chapter+1} / 3 · ${c.channel}`}</span></div>${journeySteps(presentationStep(), d.phase === "complete" ? completeOutcome : outcome)}<div class="pt-content" data-presentation-phase="${h(d.phase)}" data-presentation-chapter="${d.chapter}">${body}</div>${d.error ? `<div class="pt-error" role="alert">${h(d.error)} <button data-presentation-restart ${d.busy ? "disabled" : ""}>Start a fresh rehearsal</button></div>` : ""}<footer class="pt-controls"><div><span class="pt-small-label">${d.busy ? "WORKING" : d.phase === "decide" ? "YOUR TURN · BUSINESS OWNER" : "NEXT IN THIS DEMO"}</span><p>${d.busy ? "Waiting for the application. No step is skipped." : h(presentationNextText())}</p></div>${(d.phase === "result" && !presentationVerified(d.proposal,d.result)) || (d.phase === "decide" && d.error) ? `<button data-presentation-refresh ${d.busy ? "disabled" : ""}>Check application status</button>` : ""}${controls}</footer></main>`;
+  app.innerHTML = `<main class="pt-shell"><header class="pt-header">${brand()}<div class="pt-header-right"><span class="pt-demo-badge">INTERACTIVE DEMO · MOCK DATA</span>${state.health?.sandbox_available ? '<a data-presentation-yext href="/sandbox/" target="_blank" rel="noopener">Test real Yext apply ↗</a>' : ""}</div></header><div class="pt-context"><span>CHRISTMAS EVE · 24 DEC 2026</span><span>${["start","scan"].includes(d.phase) ? "ALL BUSINESSES" : d.phase === "complete" ? "REHEARSAL COMPLETE" : `CHAPTER ${d.chapter+1} / 3 · ${c.channel}`}</span></div><nav class="pt-navigation" aria-label="Demo navigation">${!["start","scan"].includes(d.phase) ? `<button data-presentation-detect ${d.busy ? "disabled" : ""}>← Back to Detect</button>` : '<span>Next guides the flow · you decide at step 4</span>'}<button data-presentation-restart ${!d.ready || d.busy || d.run?.status === "RUNNING" ? "disabled" : ""}>Restart demo · resets data</button></nav>${journeySteps(presentationStep(), d.phase === "complete" ? completeOutcome : outcome)}<div class="pt-content" data-presentation-phase="${h(d.phase)}" data-presentation-chapter="${d.chapter}">${body}</div>${["start","scan","result","complete"].includes(d.phase) ? presentationYextView() : ""}${d.error ? `<div class="pt-error" role="alert">${h(d.error)} <button data-presentation-restart ${d.busy ? "disabled" : ""}>Start a fresh rehearsal</button></div>` : ""}<footer class="pt-controls"><div><span class="pt-small-label">${d.busy ? "WORKING" : d.phase === "decide" ? "YOUR TURN · BUSINESS OWNER" : "NEXT IN THIS DEMO"}</span><p>${d.busy ? "Waiting for the application. No step is skipped." : h(presentationNextText())}</p></div>${(d.phase === "result" && !presentationVerified(d.proposal,d.result)) || (d.phase === "decide" && d.error) ? `<button data-presentation-refresh ${d.busy ? "disabled" : ""}>Check application status</button>` : ""}${controls}</footer></main>`;
   if (d.phase === "decide") {
     const pane = document.querySelector(".cm-email-reading");
     if (pane?.querySelector(".outgoing, .cm-email-composer")) pane.scrollTop = pane.scrollHeight;
@@ -215,8 +261,7 @@ async function preparePresentation() {
   // Reset revokes sessions. Re-open the same local operator entry to get fresh cookies.
   await fetch("/",{credentials:"same-origin",cache:"no-store"});
   state.owner = null; state.proposals = []; state.drafts = {}; state.replyText = {}; state.editing = null;
-  emailComposers.clear(); emailConversations.clear(); emailConfirmations.clear();
-  smsComposers.clear(); smsConversations.clear(); smsConfirmations.clear();
+  clearPresentationDrafts();
   Object.assign(presentation,{phase:"scan",chapter:0,proposal:null,message:null,result:null,cases:[],outcomes:[],error:""});
   presentation.run = await api("/api/v1/operator/fleet-runs","POST",{scope:"EXPLICIT_DATE",date:PRESENTATION_DATE});
   presentation.runId = presentation.run.run_id;
@@ -225,7 +270,8 @@ async function preparePresentation() {
 }
 async function nextPresentation(restart=false) {
   const d = presentation;
-  if (!presentationActive() || d.busy || (!restart && !presentationCanAdvance())) return;
+  if (!presentationActive() || presentationNavigationBusy() || (!restart && !presentationCanAdvance())) return;
+  if (restart && d.run?.status === "RUNNING") return;
   d.busy = true; d.error = ""; renderPresentation();
   try {
     if (restart || ["start","complete"].includes(d.phase)) await preparePresentation();
@@ -233,8 +279,16 @@ async function nextPresentation(restart=false) {
     else if (d.phase === "suggest") { await presentationMessage(); d.phase="contact"; }
     else if (d.phase === "contact") { await presentationOwner(); d.phase="decide"; }
     else if (d.phase === "result") {
-      if (d.chapter === PRESENTATION_CHAPTERS.length-1) await presentationComplete();
-      else { d.chapter++; d.phase="suggest"; await presentationLoadChapter(); }
+      let next = presentationNextChapter();
+      // The local outcome cache is empty after a reload. Read unknown chapters
+      // before navigating: completed records are skipped, never replayed.
+      while (next !== undefined) {
+        d.chapter=next; d.phase="suggest"; await presentationLoadChapter();
+        if (!presentationVerified(d.proposal, d.result)) break;
+        presentationRememberResult();
+        next = presentationNextChapter();
+      }
+      if (next === undefined) await presentationComplete();
     }
     savePresentation();
   } catch(error) { d.error = error.message || "The demo needs attention. No successful outcome has been assumed."; savePresentation(); }
@@ -266,7 +320,15 @@ async function initPresentation() {
   d.ready=true;savePresentation();renderPresentation();
 }
 document.addEventListener("click",e => {
-  if (e.target.closest("[data-presentation-next]")) void nextPresentation();
-  else if (e.target.closest("[data-presentation-restart]")) void nextPresentation(true);
-  else if (e.target.closest("[data-presentation-refresh]")) void resolvePresentation();
+  if (e.target.closest("[data-presentation-next]")) {
+    if (presentation.phase === "complete") requestPresentationRestart();
+    else void nextPresentation();
+  } else if (e.target.closest("[data-presentation-restart]")) requestPresentationRestart();
+  else if (e.target.closest("[data-presentation-reset-confirm]")) {
+    if (presentationNavigationBusy()) return;
+    dialog.close(); void nextPresentation(true);
+  } else if (e.target.closest("[data-presentation-detect]")) backToPresentationDetect();
+  else if (e.target.closest("[data-presentation-chapter-pick]")) {
+    backToPresentationDetect(Number(e.target.closest("[data-presentation-chapter-pick]").dataset.presentationChapterPick));
+  } else if (e.target.closest("[data-presentation-refresh]")) void resolvePresentation();
 });

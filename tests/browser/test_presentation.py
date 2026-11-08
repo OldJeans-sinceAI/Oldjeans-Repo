@@ -8,7 +8,7 @@ from app.domain import read_back_value
 
 BASE = os.getenv('TEST_BASE_URL', 'http://127.0.0.1:8029')
 MOCK = os.getenv('TEST_MOCK_BASE', 'http://127.0.0.1:8819')
-OUT = Path(os.getenv('BROWSER_ARTIFACTS', '/tmp/ojr-interactive-decide-proof'))
+OUT = Path(os.getenv('BROWSER_ARTIFACTS', '/tmp/ojr-demo-navigation-proof'))
 OUT.mkdir(parents=True, exist_ok=True)
 expect.set_options(timeout=60000)
 
@@ -28,6 +28,15 @@ def main():
         expect(next_button).to_be_enabled()
         health = page.request.get(BASE+'/api/v1/health').json()
         assert health['mode']=='mock' and health['presentation_mode'] and not health['reply_interpreter']['configured']
+        expect(page.locator('.pt-header [href="/?view=workspace"]')).to_have_count(0)
+        expect(page.locator('[data-presentation-yext]')).to_have_count(0)
+        expect(page.locator('.pt-yext')).to_contain_text('not connected')
+        # Only test link rendering here; this isolated server has no real sandbox.
+        page.evaluate('() => { state.health.sandbox_available = true; renderPresentation(); }')
+        expect(page.locator('.pt-header [data-presentation-yext]')).to_have_attribute('href','/sandbox/')
+        expect(page.locator('.pt-header [data-presentation-yext]')).to_have_attribute('target','_blank')
+        page.evaluate('() => { state.health.sandbox_available = false; renderPresentation(); }')
+        checks.append('Main demo has no legacy-workspace header; real-Yext link only appears when available')
 
         def phase(value, chapter=None):
             expect(page.locator('[data-presentation-phase]')).to_have_attribute('data-presentation-phase', value)
@@ -36,6 +45,8 @@ def main():
         def advance(value, chapter=None):
             expect(next_button).to_be_enabled()
             next_button.click()
+            if page.locator('[data-presentation-reset-confirm]').is_visible():
+                page.locator('[data-presentation-reset-confirm]').click()
             phase(value,chapter)
             expect(page.locator('.pt-error')).to_have_count(0)
         def current(): return page.evaluate('presentation.proposal')
@@ -59,17 +70,42 @@ def main():
         for cycle, decisions in enumerate(cycles):
             print('Rehearsal',cycle+1, decisions, flush=True)
             advance('scan',0)
+            if page.evaluate('presentation.run?.status')=='RUNNING':
+                expect(page.locator('[data-presentation-restart]')).to_be_disabled()
             expect(next_button).to_be_enabled(timeout=300000)
             run=page.evaluate('presentation.run')
             assert run['status']=='COMPLETED' and run['processed_businesses']==3032 and run['failed_businesses']==0
             assert page.request.get(BASE+'/api/v1/operator/messages').json()['total']==0
-            advance('suggest',0)
-            for chapter,(channel,decision) in enumerate(zip(('WHATSAPP','EMAIL','SMS'),decisions)):
+            order=[2,0,1] if cycle==2 else [0,1,2]
+            if cycle==0:
+                shot('detect-with-navigation')
+                page.locator('[data-presentation-restart]').click()
+                expect(page.locator('dialog[open]')).to_contain_text('does not reset the real Yext sandbox')
+                page.get_by_role('button',name='Keep this rehearsal',exact=True).click()
+                assert page.evaluate('presentation.runId')==run['run_id']
+            page.locator('[data-presentation-chapter-pick="'+str(order[0])+'"]').click()
+            advance('suggest',order[0])
+            for position,chapter in enumerate(order):
+                channel=('WHATSAPP','EMAIL','SMS')[chapter]
+                decision=decisions[chapter]
                 p=current()
                 print('Customer choice:',channel,decision,p['entity_id'],flush=True)
                 before=hours(p)
                 if cycle==0: originals[p['entity_id']]=before
                 else: assert before==originals[p['entity_id']]
+                if cycle==0 and chapter==0:
+                    mutations=[]
+                    def record_navigation(request):
+                        if request.method not in ('GET','HEAD'): mutations.append(request.url)
+                    page.on('request',record_navigation)
+                    page.locator('[data-presentation-detect]').click(); phase('scan',0)
+                    assert page.evaluate('presentation.runId')==run['run_id']
+                    page.reload(); phase('scan',0)
+                    advance('suggest',0)
+                    page.remove_listener('request',record_navigation)
+                    assert not mutations,mutations
+                    assert current()['proposal_id']==p['proposal_id'] and hours(p)==before
+                    checks.append('Back to Detect, reload and Next preserve scan/proposal/data without any POST')
                 advance('contact',chapter)
                 advance('decide',chapter)
                 expect(next_button).to_have_count(0)
@@ -77,6 +113,15 @@ def main():
                 assert stored(p)['decision_status']=='PENDING'
                 assert page.evaluate('async () => { await nextPresentation(); return presentation.phase; }')=='decide'
                 assert stored(p)['decision_status']=='PENDING' and hours(p)==before
+                if cycle==0 and channel=='EMAIL':
+                    reply(channel,'YES')
+                    expect(page.locator('.pt-owner-view')).to_contain_text('Reply CONFIRM')
+                    page.locator('[data-presentation-detect]').click(); phase('scan',chapter)
+                    advance('suggest',chapter); advance('contact',chapter); advance('decide',chapter)
+                    reply(channel,'CONFIRM')
+                    expect(page.locator('.cm-email-thread-message.incoming').last).to_contain_text('No current change')
+                    assert stored(p)['decision_status']=='PENDING' and hours(p)==before
+                    checks.append('Leaving Decide discards the unconfirmed reply and never applies it on return')
                 if cycle==0: shot(channel.lower()+'-interactive')
                 expected_hours=f'{10+chapter:02}:00-17:00'
                 if channel=='WHATSAPP':
@@ -103,7 +148,14 @@ def main():
                             data.pop('verified_at',None)
                             route.fulfill(response=response,json=data)
                         page.route('**/api/v1/proposals/*/result',unverified)
-                        page.evaluate("""() => { const b=document.querySelector('[data-decision=APPROVE]'); b.click(); b.click(); }""")
+                        held=[]
+                        page.route('**/api/v1/proposals/*/decisions',lambda route: held.append(route))
+                        page.locator('[data-decision=APPROVE]').click()
+                        page.locator('[data-presentation-detect]').click()
+                        phase('decide',chapter)
+                        assert len(held)==1 and stored(p)['decision_status']=='PENDING'
+                        held[0].continue_()
+                        page.unroute('**/api/v1/proposals/*/decisions')
                         phase('result',chapter)
                         expect(next_button).to_be_disabled()
                         expect(page.locator('.pt-content')).to_contain_text('This result needs attention.')
@@ -112,6 +164,7 @@ def main():
                         page.locator('[data-presentation-refresh]').click()
                         expect(next_button).to_be_enabled()
                         checks.append('Unverified result blocks completion; status refresh reads without resubmitting')
+                        checks.append('Back to Detect is blocked while an owner decision is in flight')
                     else:
                         page.locator('[data-decision='+decision+']').click()
                 else:
@@ -155,7 +208,17 @@ def main():
                     assert read_back_value(hours(p),p['change'])==(p['change']['hours'] if decision=='APPROVE' else expected_hours)
                 checks.append(f'{channel} freely chosen {decision} automatically opens the actual step5 result')
                 if cycle==0: shot(channel.lower()+'-result')
-                if chapter<2: advance('suggest',chapter+1)
+                if cycle==0 and chapter==0:
+                    previous=page.evaluate('JSON.stringify(presentation.outcomes)')
+                    page.locator('[data-presentation-detect]').click(); phase('scan',chapter)
+                    advance('result',chapter)
+                    assert page.evaluate('JSON.stringify(presentation.outcomes)')==previous
+                    assert stored(p)['decision_status']=='REJECTED' and hours(p)==before
+                    checks.append('Returning to a decided business shows its recorded result without replay')
+                if position<2: advance('suggest',order[position+1])
+            if cycle==0:
+                page.reload(); phase('result',2)
+                expect(next_button).to_be_enabled()
             advance('complete',2)
             labels={'APPROVE':'Approved & saved','EDIT':'Edited & saved','REJECT':'Declined & kept'}
             for i,decision in enumerate(decisions):
@@ -165,6 +228,8 @@ def main():
                 expect(page.locator('.pt-finish-cards h2').nth(i)).to_have_text(labels[decision])
             if cycle==0: shot('complete-actual-choices')
         checks.append('Three repeat rehearsals restore original data; summaries and reload reflect actual choices')
+        checks.append('Selecting SMS first still visits remaining businesses and verifies all three before completion')
+        checks.append('Reload before the final Next skips already-verified businesses and opens the actual summary')
         assert not errors,errors
         assert not external,external
         browser.close()
