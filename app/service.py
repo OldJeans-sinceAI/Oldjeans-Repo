@@ -459,16 +459,16 @@ class Service:
                     rows.append(p)
         return max(rows, key=lambda p: p.get("_decided_at", ""), default=None)
 
-    def _context(self, eid, target, live=None):
+    def _context(self, eid, target_date, live=None):
         e = self._entity(eid)
-        cal = self.data.cal_by_date.get((e["meta"]["countryCode"], target), {})
+        cal = self.data.cal_by_date.get((e["meta"]["countryCode"], target_date), {})
         ctx = self.data.context(
-            eid, target, cal.get("day_key", "REGULAR"), cal.get("day_type", "REGULAR")
+            eid, target_date, cal.get("day_key", "REGULAR"), cal.get("day_type", "REGULAR")
         )
         if live is not None:
-            ctx.displayed_hours = effective(live.get("hours", {}), target)
+            ctx.displayed_hours = effective(live.get("hours", {}), target_date)
             ctx.already_closed = bool(live.get("closed"))
-        feedback = self._feedback(eid, target, ctx.day_key)
+        feedback = self._feedback(eid, target_date, ctx.day_key)
         if feedback:
             ch = feedback["_result"]["final_change"]
             record = dict(
@@ -476,7 +476,7 @@ class Service:
                 source_record=feedback["proposal_id"],
                 known_at=feedback["_decided_at"],
             )
-            if ch["date"] == target:
+            if ch["date"] == target_date:
                 ctx.feedback = record
                 if ctx.owner_confirmation and parse_dt(record["known_at"]) > parse_dt(
                     ctx.owner_confirmation["known_at"]
@@ -1317,7 +1317,7 @@ class Service:
                 ),
                 missing_fields=[],
             )
-        return self.replies.interpret(b["text"], b["language"], p, multiple)
+        return self.replies.interpret(b["text"], b["language"], p, multiple=multiple)
 
     def _message_text(self, eid, proposals, language):
         lex = {
