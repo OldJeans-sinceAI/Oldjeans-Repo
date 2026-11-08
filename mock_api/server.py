@@ -120,6 +120,14 @@ def _interval_errors(where, d):
 
 
 def validate_hours(h: dict) -> list[str]:
+    """Validates Yext API hours object structure and business logic rules.
+
+    Yext Rules Enforced:
+    1. Read-Modify-Write: If any weekday keys are updated, all 7 weekdays must be provided.
+    2. Exclusive Flags: In `holidayHours`, exactly one of `isClosed`, `isRegularHours`, or `openIntervals`
+       may be specified per holiday date entry.
+    3. Interval Sanity: `openIntervals` must have valid HH:MM formats, start != end, and non-overlapping ranges.
+    """
     errs = []
     if not isinstance(h, dict):
         return ["hours must be an object"]

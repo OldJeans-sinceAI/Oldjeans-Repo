@@ -1069,6 +1069,8 @@ class Service:
                     )
 
     def _apply(self, op):
+        # Executes remote state changes to Yext (or mock) with read-before-write and
+        # read-after-write verification to prevent duplicate writes during network failures.
         p = self.proposal(op["proposal_id"])
         r = p["_result"]
         change = op["change"]
@@ -1081,6 +1083,10 @@ class Service:
         err_code = self._check_apply_preconditions(op, p)
         if err_code:
             return fail("REVIEW_REQUIRED", err_code)
+
+        # Retry loop (max 3 attempts): Read remote entity first before sending PUT requests.
+        # This prevents duplicate writes if a previous attempt timed out on the client side
+        # but actually succeeded on the remote server.
         for _ in range(3):
             try:
                 latest = self._read(p["entity_id"])

@@ -230,6 +230,16 @@ class ResetManager:
                 )
 
     def execute(self, body, key):
+        """Executes a full system reset to baseline data.
+
+        Safety & Recovery Strategy:
+        1. Pre-reset validation: Checks idempotency, confirmation flags, and baseline integrity.
+        2. Backup Creation: Writes a timestamped JSON state snapshot to disk BEFORE making any changes.
+        3. Journaling: Logs the active reset phase in `reset.json`. If an error or process interrupt occurs,
+           the system sets `s.reset_blocked = True`, locking non-reset API mutations until recovery succeeds.
+        4. Remote Restore: Sends reset PUT requests to restore Yext / mock backend state.
+        5. Verification: Reads back remote state to verify matching baseline values before finalizing.
+        """
         check_idempotency_key(key)
         if body.get("confirm_reset") is not True:
             raise AppError(
