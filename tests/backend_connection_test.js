@@ -28,6 +28,7 @@ async function testYextConnection() {
     } else {
        console.error(error.message);
     }
+    process.exitCode = 1;
   }
 }
 
