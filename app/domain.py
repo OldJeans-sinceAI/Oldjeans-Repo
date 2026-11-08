@@ -419,10 +419,7 @@ def _priority(
     return "ROUTINE", reasons or ["Routine cadence"]
 
 
-def _select_candidate(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
-    """Return {hours, confidence, purpose, reason_code, profile} or None (section 8 order)."""
-    P = POLICY["P09_evidence"]
-    # 1. current-date owner confirmation
+def _select_from_owner_confirmation(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
     if ctx.owner_confirmation:
         h = ctx.owner_confirmation["hours"]
         ev.append(
@@ -443,7 +440,10 @@ def _select_candidate(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
             "reason_code": "OWNER_CONFIRMED",
             "profile": "DIRECT",
         }
-    # 2. runtime feedback (prior confirmed decision for this exact date) - never used in evaluation mode
+    return None
+
+
+def _select_from_feedback(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
     if ctx.feedback:
         ev.append(
             _evidence(
@@ -463,7 +463,10 @@ def _select_candidate(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
             "reason_code": "FEEDBACK_REUSE",
             "profile": "DIRECT",
         }
-    # 3. own same-day_key history + pilot ACCEPTED/EDITED finals within history_seasons
+    return None
+
+
+def _select_from_history(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
     own = sorted(
         ctx.own_history,
         key=lambda r: (r.get("date", ""), parse_dt(r.get("entered_at", "1970-01-01"))),
@@ -490,42 +493,46 @@ def _select_candidate(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
         )
     else:
         best = src or pil
-    if best:
-        if "final_hours" in best:
-            h, sr, known = (
-                best["final_hours"],
-                best.get("suggestion_id", "pilot"),
-                best.get("decided_at"),
-            )
-            fname, summary = (
-                "pilot_decision_log_2025.csv",
-                "Owner accepted/edited these hours for the same holiday in a previous season.",
-            )
-        else:
-            h, sr, known = (
-                best["hours"],
-                best.get("source_record", "history"),
-                best.get("entered_at"),
-            )
-            fname, summary = (
-                "runtime/state.json"
-                if str(sr).startswith("runtime:")
-                else "holiday_hours_history.jsonl",
-                "Own entry for the same day_key in a prior season.",
-            )
-        ev.append(
-            _evidence(
-                "ev-history", fname, sr, "DIRECT", summary, known, best.get("date")
-            )
+    if not best:
+        return None
+    if "final_hours" in best:
+        h, sr, known = (
+            best["final_hours"],
+            best.get("suggestion_id", "pilot"),
+            best.get("decided_at"),
         )
-        return {
-            "hours": h,
-            "confidence": "MEDIUM",
-            "purpose": "CORRECTION",
-            "reason_code": "HISTORY_PATTERN",
-            "profile": "DIRECT",
-        }
-    # 4. centre, gated
+        fname, summary = (
+            "pilot_decision_log_2025.csv",
+            "Owner accepted/edited these hours for the same holiday in a previous season.",
+        )
+    else:
+        h, sr, known = (
+            best["hours"],
+            best.get("source_record", "history"),
+            best.get("entered_at"),
+        )
+        fname, summary = (
+            "runtime/state.json"
+            if str(sr).startswith("runtime:")
+            else "holiday_hours_history.jsonl",
+            "Own entry for the same day_key in a prior season.",
+        )
+    ev.append(
+        _evidence(
+            "ev-history", fname, sr, "DIRECT", summary, known, best.get("date")
+        )
+    )
+    return {
+        "hours": h,
+        "confidence": "MEDIUM",
+        "purpose": "CORRECTION",
+        "reason_code": "HISTORY_PATTERN",
+        "profile": "DIRECT",
+    }
+
+
+def _select_from_centre(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
+    P = POLICY["P09_evidence"]
     c = ctx.centre
     if (
         c
@@ -551,7 +558,13 @@ def _select_candidate(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
             "reason_code": "CENTRE_ALIGNED",
             "profile": "PARTIAL",
         }
-    # Own comparable holidays require repeated consistent schedules.
+    return None
+
+
+def _select_from_comparable_or_opportunity(
+    ctx: DetectContext, ev: list[dict]
+) -> Optional[dict]:
+    P = POLICY["P09_evidence"]
     groups = {}
     for row in ctx.comparable:
         groups.setdefault(row["hours"], []).append(row)
@@ -591,7 +604,11 @@ def _select_candidate(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
             "reason_code": "OWN_CONTEXT_PATTERN",
             "profile": "PARTIAL",
         }
-    # 5. peers: a closed candidate requires separate corroboration
+    return None
+
+
+def _select_from_peer(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
+    P = POLICY["P09_evidence"]
     pr = ctx.peer
     if (
         pr
@@ -617,6 +634,18 @@ def _select_candidate(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
             "profile": "PARTIAL",
         }
     return None
+
+
+def _select_candidate(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
+    """Return {hours, confidence, purpose, reason_code, profile} or None (section 8 order)."""
+    return (
+        _select_from_owner_confirmation(ctx, ev)
+        or _select_from_feedback(ctx, ev)
+        or _select_from_history(ctx, ev)
+        or _select_from_centre(ctx, ev)
+        or _select_from_comparable_or_opportunity(ctx, ev)
+        or _select_from_peer(ctx, ev)
+    )
 
 
 def evaluate_context(ctx: DetectContext, now: datetime) -> dict:
@@ -1110,6 +1139,8 @@ class DataStore:
                 self.unavailable.append(name)
                 return {} if kind == "json" else []
 
+        self._load_critical_sources(read)
+    def _load_critical_sources(self, read):
         try:
             ents = read("entities.json", "json", True)["response"]["entities"]
             if not ents or any(
@@ -1153,6 +1184,7 @@ class DataStore:
             raise DataError(
                 "Malformed critical entities/calendar/contacts source"
             ) from None
+
         self.holiday = {}
         self.regular = {}
         self.pilot = {}
