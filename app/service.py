@@ -4,7 +4,15 @@ from __future__ import annotations
 import copy, hashlib, json, os, secrets
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 from . import POLICY
+from .errors import (
+    AppError,
+    check_idempotency_key,
+    digest,
+    fingerprint,
+    MAX_IDEMPOTENCY_KEY_LENGTH,
+)
 from .domain import (
     DataStore,
     evaluate_context,
@@ -21,6 +29,7 @@ from .domain import (
     relevant_state_hash,
     canonical_hours,
     day_to_hours_string,
+    parse_intervals,
     DAYS,
     MINUTES_PER_DAY,
     _get_timezone,
@@ -32,40 +41,12 @@ DEFAULT_YEXT_API_VERSION = "20261106"
 DEFAULT_TIMEZONE = "Europe/Helsinki"
 DEFAULT_CONTACT_WINDOW = "10-12"
 DEFAULT_FREQUENCY = "TWICE_MONTHLY"
-MAX_IDEMPOTENCY_KEY_LENGTH = 200
 PROPOSAL_TTL_DAYS = 14
 PERMISSION_MAX_TTL_DAYS = 365
 SANDBOX_HOST_DOMAIN = "sbx-api.yextapis.com"
 from .storage import StateStore
 from .replies import OwnerReplies
 from examples.yext_client import YextClient
-
-
-class AppError(Exception):
-    def __init__(self, status, code, message, retryable=False, details=None):
-        self.status, self.code, self.message, self.retryable, self.details = (
-            status,
-            code,
-            message,
-            retryable,
-            details or {},
-        )
-        super().__init__(message)
-
-
-def check_idempotency_key(key: str | None) -> None:
-    if not key or len(key) > MAX_IDEMPOTENCY_KEY_LENGTH:
-        raise AppError(
-            400, "IDEMPOTENCY_KEY_REQUIRED", "A valid Idempotency-Key is required."
-        )
-
-
-def digest(v):
-    return hashlib.sha256(v.encode()).hexdigest()
-
-
-def fingerprint(v):
-    return digest(json.dumps(v, sort_keys=True, separators=(",", ":")))
 
 
 def effective(hours, day):
@@ -147,7 +128,6 @@ class Service:
                     "SANDBOX_MAPPING_REQUIRED",
                     "Configure source and target entity IDs.",
                 )
-            from urllib.parse import urlparse
 
             if (
                 client is None
@@ -1047,8 +1027,6 @@ class Service:
         self._validate_adjacent(latest.get("hours", {}), change)
 
     def _validate_adjacent(self, hours, change):
-        from .domain import parse_intervals
-
         merged = merge_change_into_hours(hours, change)
         if change["kind"] == "DATE_HOURS":
             d = date.fromisoformat(change["date"])

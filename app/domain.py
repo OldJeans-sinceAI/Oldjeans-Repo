@@ -1009,7 +1009,7 @@ def interpret_reply(text: str, language: str, proposal: dict) -> dict:
     }
 
 
-def _ready_edit(proposal, version, date_s, hours, preview) -> dict:
+def ready_edit(proposal, version, date_s, hours, preview) -> dict:
     return {
         "status": "READY",
         "intent": "EDIT",
@@ -1024,13 +1024,17 @@ def _ready_edit(proposal, version, date_s, hours, preview) -> dict:
     }
 
 
-def _needs(preview, missing) -> dict:
+def needs_clarification(preview, missing) -> dict:
     return {
         "status": "NEEDS_CLARIFICATION",
         "intent": "UNKNOWN",
         "preview": preview,
         "missing_fields": missing,
     }
+
+
+_ready_edit = ready_edit
+_needs = needs_clarification
 
 
 # ------------------------------------------------------------------- DataStore
