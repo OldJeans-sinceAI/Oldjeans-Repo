@@ -4,22 +4,39 @@ import os
 import re
 from .domain import interpret_reply, canonical_hours, HoursError, ready_edit, needs_clarification
 from .teammate.reply_engine import ReplyEngine, DEFAULT_MODEL
+from .teammate.local_engine import LocalGemmaEngine, DEFAULT_MODEL_PATH
 
 
 class OwnerReplies:
 	def __init__(self, engine=None):
+		self.engine = engine or self._default_engine()
+
+	@staticmethod
+	def _default_engine():
+		# Preferred: offline fine-tuned Gemma (GGUF). Falls back to Gemini, then rules.
+		if os.getenv("GEMMA_ENABLED", "true").lower() == "true":
+			path = os.getenv("GEMMA_MODEL_PATH", DEFAULT_MODEL_PATH)
+			if os.path.isfile(path):
+				local = LocalGemmaEngine(
+					path, timeout=float(os.getenv("GEMMA_TIMEOUT", "4"))
+				)
+				if local.configured:
+					return local
 		api_key = (
 			os.getenv("GEMINI_API_KEY", "")
 			if os.getenv("GEMINI_ENABLED", "true").lower() == "true"
 			else ""
 		)
-		self.engine = engine or ReplyEngine(
-			api_key, os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
-		)
+		return ReplyEngine(api_key, os.getenv("GEMINI_MODEL", DEFAULT_MODEL))
+
+	def _provider(self):
+		if not self.engine.configured:
+			return "RULES"
+		return "LOCAL_GEMMA" if isinstance(self.engine, LocalGemmaEngine) else "GEMINI"
 
 	def health(self):
 		return {
-			"provider": "GEMINI" if self.engine.configured else "RULES",
+			"provider": self._provider(),
 			"model": self.engine.model if self.engine.configured else None,
 			"configured": self.engine.configured,
 			"timeout_ms": round(self.engine.timeout * 1000),
@@ -70,7 +87,7 @@ class OwnerReplies:
 		}
 		engine_reply = self.engine.interpret(context, text)
 		meta = {
-			"provider": "GEMINI",
+			"provider": self._provider(),
 			"latency_ms": engine_reply.latency_ms,
 			"error_code": engine_reply.error_code,
 		}

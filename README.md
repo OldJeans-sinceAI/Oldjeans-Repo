@@ -82,7 +82,14 @@ rehearsal, even when a key is configured. **Explore workspace** opens the intera
 UI using the same presentation data. To use the ordinary workspace and optional
 Gemini instead, stop the server and run the command without `--presentation`.
 
-**Optional Gemini (owner-reply interpretation).** Set `GEMINI_API_KEY` privately in
+**Optional local Gemma (owner-reply interpretation, preferred).** Install
+`llama-cpp-python` and place the fine-tuned GGUF at `runtime/models/gemma-2-2b-reply.gguf`
+(or set `GEMMA_MODEL_PATH`). It runs fully offline with no API key and the same safety
+contract as Gemini (any failure is `UNAVAILABLE`, never a decision). Training data and
+the LoRA/GGUF recipe: `tools/make_reply_dataset.py`, `tools/train_gemma_replies.py`.
+Provider order: local Gemma → Gemini → local rules; `/health` reports `LOCAL_GEMMA`.
+
+**Optional Gemini (owner-reply interpretation, fallback).** Set `GEMINI_API_KEY` privately in
 `.env` and keep `GEMINI_ENABLED=true`; the key stays server-side and is never sent to
 the browser. The tested default model is `gemini-3.5-flash-lite`. Without a key the
 demo still runs — buttons, yes/no and exact intervals use local rules, and complex
@@ -145,7 +152,7 @@ result. A scan checks the entire directory; each owner decides only their own pr
 The **Workspace**, **Inbox**, and **Staff review** tabs expose the underlying work.
 
 **Where AI is used.** Detect, Suggest, and Contact are deterministic evidence rules and
-templates. A generative model (Gemini, when configured) is used only to interpret a
+templates. A generative model (local Gemma, else Gemini, when configured) is used only to interpret a
 *complex* natural-language owner reply; exact replies and buttons use a local parser.
 The product does **not** claim an AI that invents every schedule or message. Confirmed
 owner outcomes are recorded and reused as evidence — this is **history reuse, not model
