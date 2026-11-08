@@ -6,7 +6,10 @@ const demoStorageKey = () => "connect-demo-journey" + APP_BASE;
 
 function newDemoState() {
  let s = {};
- try { s = JSON.parse(sessionStorage.getItem(demoStorageKey()) || "{}"); } catch {}
+ try { s = JSON.parse(sessionStorage.getItem(demoStorageKey()) || "{}"); } catch (e) {
+  console.warn("Failed to parse stored demo state:", e);
+  sessionStorage.removeItem(demoStorageKey());
+ }
  if (!s || typeof s !== "object" || Array.isArray(s)) s = {};
  return {
   stage: [1, 2, 3, 5].includes(s.stage) ? s.stage : 1,

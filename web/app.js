@@ -845,7 +845,7 @@ function draftText(d) {
   return d.preview;
 }
 const lang = "en";
-try { localStorage.setItem("connect-language", "en"); } catch {}
+try { localStorage.setItem("connect-language", "en"); } catch (e) { /* ignore storage quota/disabled errors */ }
 const t = (k) => words[lang][k] ?? words.en[k] ?? k;
 const h = (v) =>
   String(v ?? "").replace(
@@ -1014,7 +1014,7 @@ async function api(path, method = "GET", body, idem, signal) {
     let j;
     try {
       j = await response.json();
-    } catch {
+    } catch (e) {
       j = {};
     }
     let e = new Error(j.error?.message || t("error"));
@@ -1351,7 +1351,11 @@ async function initCustomer() {
       state.owner = JSON.parse(
         sessionStorage.getItem(OWNER_STORAGE) || "null",
       );
-    } catch {}
+    } catch (e) {
+      console.warn("Failed to parse stored owner session:", e);
+      sessionStorage.removeItem(OWNER_STORAGE);
+      state.owner = null;
+    }
   }
   if (state.owner) {
     await refreshOwner();

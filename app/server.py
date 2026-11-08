@@ -6,7 +6,7 @@ import secrets
 import hmac
 import re
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
-from http.cookies import SimpleCookie
+from http.cookies import SimpleCookie, CookieError
 from urllib.parse import urlparse, parse_qs, unquote
 from jsonschema import Draft202012Validator, FormatChecker
 from .service import AppError, digest
@@ -70,7 +70,7 @@ class Handler(BaseHTTPRequestHandler):
         c = SimpleCookie()
         try:
             c.load(self.headers.get("Cookie", ""))
-        except Exception:
+        except CookieError:
             return {}
         prefix = "sandbox_" if getattr(self, "workspace", "") else ""
         names = ("operator_session", "owner_session", "csrf_token")
@@ -136,7 +136,13 @@ class Handler(BaseHTTPRequestHandler):
             )
 
     def _query_int(self, q, key, default, min_val=None, max_val=None):
-        val = int(q.get(key, [str(default)])[0])
+        raw = q.get(key, [str(default)])[0]
+        try:
+            val = int(raw)
+        except (ValueError, TypeError):
+            raise AppError(
+                422, "INVALID_VALUE", f"Query parameter '{key}' must be an integer."
+            )
         if min_val is not None:
             val = max(min_val, val)
         if max_val is not None:
@@ -170,7 +176,7 @@ class Handler(BaseHTTPRequestHandler):
                 True,
             )
         except Exception as e:
-            print("Request failed:", type(e).__name__, flush=True)
+            print(f"Request failed: {type(e).__name__}: {e}", flush=True)
             self._reply_error(
                 500, "INTERNAL_ERROR", "The request could not be completed."
             )
@@ -199,7 +205,12 @@ class Handler(BaseHTTPRequestHandler):
                 "application/json"
             ):
                 raise AppError(415, "JSON_REQUIRED", "Use application/json.")
-            b = json.loads(self.rfile.read(size))
+            try:
+                b = json.loads(self.rfile.read(size))
+            except json.JSONDecodeError as e:
+                raise AppError(
+                    400, "INVALID_JSON", f"Malformed JSON request body: {e.msg}"
+                ) from e
         else:
             b = {}
         if s.reset_blocked and path != "/api/v1/operator/reset":
