@@ -7,34 +7,32 @@ from . import POLICY
 
 
 def export_text(data=None, root=None):
-    root = Path(root or Path(__file__).resolve().parents[1])
-    data = data if data is not None and data.cutoff == POLICY["P14_evaluation"]["cutoff"] else DataStore(str(root / "data"), POLICY["P14_evaluation"]["cutoff"])
-    stream = io.StringIO()
-    writer = csv.writer(stream)
-    writer.writerow(["entity_id", "date", "action", "hours"])
-    with (root / "evaluation/targets_2026.csv").open() as f:
-        for row in csv.DictReader(f):
-            ctx = data.context(row["entity_id"], row["date"], row["day_key"], row.get("day_type", "PUBLIC_HOLIDAY"))
-            out = evaluate_context(ctx, parse_dt(POLICY["P14_evaluation"]["cutoff"]))
-            action = out["action"]
-            change = out.get("change")
-            if out.get("purpose") == "OPPORTUNITY":
-                action = "NO_ACTION"
-            writer.writerow([row["entity_id"], row["date"], action, change["hours"] if action == "SUGGEST" else ""])
-    return stream.getvalue()
+ r = Path(root or Path(__file__).resolve().parents[1])
+ data = data if data is not None and data.cutoff == POLICY["P14_evaluation"]["cutoff"] else DataStore(str(r / "data"), POLICY["P14_evaluation"]["cutoff"])
+ s = io.StringIO()
+ w = csv.writer(s)
+ w.writerow(["entity_id", "date", "action", "hours"])
+ with (r / "evaluation/targets_2026.csv").open() as f:
+  for rw in csv.DictReader(f):
+   c = data.context(rw["entity_id"], rw["date"], rw["day_key"], rw.get("day_type", "PUBLIC_HOLIDAY"))
+   o = evaluate_context(c, parse_dt(POLICY["P14_evaluation"]["cutoff"]))
+   act, ch = o["action"], o.get("change")
+   if o.get("purpose") == "OPPORTUNITY": act = "NO_ACTION"
+   w.writerow([rw["entity_id"], rw["date"], act, ch["hours"] if act == "SUGGEST" else ""])
+ return s.getvalue()
 
 
 def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--output", default="outputs/product/predictions_2026.csv")
-    p.add_argument("--root", default=str(Path(__file__).resolve().parents[1]))
-    a = p.parse_args()
-    text = export_text(root=a.root)
-    out = Path(a.output)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(text, encoding="utf-8")
-    print(f"Wrote {len(text.splitlines()) - 1} frozen target predictions to {out}")
+ p = argparse.ArgumentParser()
+ p.add_argument("--output", default="outputs/product/predictions_2026.csv")
+ p.add_argument("--root", default=str(Path(__file__).resolve().parents[1]))
+ a = p.parse_args()
+ t = export_text(root=a.root)
+ o = Path(a.output)
+ o.parent.mkdir(parents=True, exist_ok=True)
+ o.write_text(t, encoding="utf-8")
+ print(f"Wrote {len(t.splitlines()) - 1} frozen target predictions to {o}")
 
 
 if __name__ == "__main__":
-    main()
+ main()
