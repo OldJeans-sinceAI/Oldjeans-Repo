@@ -18,7 +18,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from .domain import merge_change_into_hours
-from .service import AppError, fingerprint
+from .service import AppError, check_idempotency_key, fingerprint
 from .storage import StateStore
 
 
@@ -230,10 +230,7 @@ class ResetManager:
                 )
 
     def execute(self, body, key):
-        if not key or len(key) > 200:
-            raise AppError(
-                400, "IDEMPOTENCY_KEY_REQUIRED", "A valid Idempotency-Key is required."
-            )
+        check_idempotency_key(key)
         if body.get("confirm_reset") is not True:
             raise AppError(
                 422, "RESET_CONFIRMATION_REQUIRED", "Confirm the displayed reset scope."

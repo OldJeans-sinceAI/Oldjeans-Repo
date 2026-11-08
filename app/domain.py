@@ -41,6 +41,10 @@ def _minutes_to_time(m: int) -> str:
     return f"{m // 60:02d}:{m % 60:02d}"
 
 
+def _format_interval_end(e: int) -> str:
+    return "23:59" if e == 1439 else _minutes_to_time(e)
+
+
 def parse_intervals(spec: str) -> list[tuple[int, int]]:
     """'closed' -> []. '09:00-17:00' / split / overnight -> [(start,end)] in minutes.
 
@@ -89,8 +93,7 @@ def canonical_hours(spec: str) -> str:
         return "closed"
     parts = []
     for s, e in sorted(ivs):
-        end = "23:59" if e == 1439 else _minutes_to_time(e)
-        parts.append(f"{_minutes_to_time(s)}-{end}")
+        parts.append(f"{_minutes_to_time(s)}-{_format_interval_end(e)}")
     return ",".join(parts)
 
 
@@ -112,7 +115,7 @@ def hours_string_to_day(spec: str) -> dict:
         return {"isClosed": True}
     return {
         "openIntervals": [
-            {"start": _minutes_to_time(s), "end": "23:59" if e == 1439 else _minutes_to_time(e)} for s, e in ivs
+            {"start": _minutes_to_time(s), "end": _format_interval_end(e)} for s, e in ivs
         ]
     }
 
@@ -166,6 +169,13 @@ def merge_change_into_hours(current_hours: dict, change: dict) -> dict:
     return hours
 
 
+def _format_weekly_hours(weekdays: dict) -> str:
+    return ";".join(
+        f"{wd}={canonical_hours(weekdays[wd])}"
+        for wd in sorted(weekdays)
+    )
+
+
 def read_back_value(hours: dict, change: dict) -> str:
     """Extract the canonical stored value for a change so it can be compared to intent."""
     kind = change["kind"]
@@ -177,9 +187,8 @@ def read_back_value(hours: dict, change: dict) -> str:
                 return canonical_hours(day_to_hours_string(h))
         return "ABSENT"
     if kind == "WEEKLY_HOURS":
-        return ";".join(
-            f"{wd}={canonical_hours(day_to_hours_string(hours.get(wd)))}"
-            for wd in sorted(change["weekdays"])
+        return _format_weekly_hours(
+            {wd: day_to_hours_string(hours.get(wd)) for wd in change["weekdays"]}
         )
     if kind == "REOPEN_DATE":
         return str(hours.get("reopenDate", ""))
@@ -191,10 +200,7 @@ def change_target_value(change: dict) -> str:
     if kind == "DATE_HOURS":
         return canonical_hours(change["hours"])
     if kind == "WEEKLY_HOURS":
-        return ";".join(
-            f"{wd}={canonical_hours(change['weekdays'][wd])}"
-            for wd in sorted(change["weekdays"])
-        )
+        return _format_weekly_hours(change["weekdays"])
     if kind == "REOPEN_DATE":
         return change["reopen_date"]
     return ""
@@ -419,6 +425,22 @@ def _priority(
     return "ROUTINE", reasons or ["Routine cadence"]
 
 
+def _candidate(
+    hours: str,
+    reason_code: str,
+    confidence: str = "MEDIUM",
+    purpose: str = "CORRECTION",
+    profile: str = "PARTIAL",
+) -> dict:
+    return {
+        "hours": hours,
+        "confidence": confidence,
+        "purpose": purpose,
+        "reason_code": reason_code,
+        "profile": profile,
+    }
+
+
 def _select_from_owner_confirmation(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
     if ctx.owner_confirmation:
         h = ctx.owner_confirmation["hours"]
@@ -433,13 +455,7 @@ def _select_from_owner_confirmation(ctx: DetectContext, ev: list[dict]) -> Optio
                 ctx.target_date,
             )
         )
-        return {
-            "hours": h,
-            "confidence": "HIGH",
-            "purpose": "CORRECTION",
-            "reason_code": "OWNER_CONFIRMED",
-            "profile": "DIRECT",
-        }
+        return _candidate(h, "OWNER_CONFIRMED", confidence="HIGH", profile="DIRECT")
     return None
 
 
@@ -456,13 +472,12 @@ def _select_from_feedback(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
                 ctx.target_date,
             )
         )
-        return {
-            "hours": ctx.feedback["hours"],
-            "confidence": "HIGH",
-            "purpose": "CORRECTION",
-            "reason_code": "FEEDBACK_REUSE",
-            "profile": "DIRECT",
-        }
+        return _candidate(
+            ctx.feedback["hours"],
+            "FEEDBACK_REUSE",
+            confidence="HIGH",
+            profile="DIRECT",
+        )
     return None
 
 
@@ -522,13 +537,7 @@ def _select_from_history(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
             "ev-history", fname, sr, "DIRECT", summary, known, best.get("date")
         )
     )
-    return {
-        "hours": h,
-        "confidence": "MEDIUM",
-        "purpose": "CORRECTION",
-        "reason_code": "HISTORY_PATTERN",
-        "profile": "DIRECT",
-    }
+    return _candidate(h, "HISTORY_PATTERN", profile="DIRECT")
 
 
 def _select_from_centre(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
@@ -551,13 +560,7 @@ def _select_from_centre(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
                 applicable_date=ctx.target_date,
             )
         )
-        return {
-            "hours": c["target_hours"],
-            "confidence": "MEDIUM",
-            "purpose": "CORRECTION",
-            "reason_code": "CENTRE_ALIGNED",
-            "profile": "PARTIAL",
-        }
+        return _candidate(c["target_hours"], "CENTRE_ALIGNED")
     return None
 
 
@@ -587,23 +590,13 @@ def _select_from_comparable_or_opportunity(
                     row["date"],
                 )
             )
-        return {
-            "hours": h,
-            "confidence": "MEDIUM",
-            "purpose": "CORRECTION",
-            "reason_code": "COMPARABLE_HOLIDAY",
-            "profile": "PARTIAL",
-        }
+        return _candidate(h, "COMPARABLE_HOLIDAY")
     if ctx.opportunity:
         op = ctx.opportunity
         ev.extend(op["evidence"])
-        return {
-            "hours": op["hours"],
-            "confidence": "MEDIUM",
-            "purpose": "OPPORTUNITY",
-            "reason_code": "OWN_CONTEXT_PATTERN",
-            "profile": "PARTIAL",
-        }
+        return _candidate(
+            op["hours"], "OWN_CONTEXT_PATTERN", purpose="OPPORTUNITY"
+        )
     return None
 
 
@@ -626,13 +619,7 @@ def _select_from_peer(ctx: DetectContext, ev: list[dict]) -> Optional[dict]:
                 applicable_date=ctx.target_date,
             )
         )
-        return {
-            "hours": "closed",
-            "confidence": "MEDIUM",
-            "purpose": "CORRECTION",
-            "reason_code": "PEER_CLOSED",
-            "profile": "PARTIAL",
-        }
+        return _candidate("closed", "PEER_CLOSED")
     return None
 
 
@@ -1238,27 +1225,34 @@ class DataStore:
     def entity(self, eid: str) -> Optional[dict]:
         return self.entities.get(eid)
 
-    def regular_hours(self, eid: str, d: date) -> str:
-        rows = [
+    def _effective_regular_hours_dict(
+        self, eid: str, limit_date: str, inclusive: bool = True
+    ) -> dict:
+        eligible = [
             r
             for r in self.regular.get(eid, [])
             if r["effective_from"] == "before-2024"
-            or r["effective_from"] < self.cutoff[:10]
-        ]
-        if not rows:
-            return canonical_hours(
-                day_to_hours_string(
-                    self.entities[eid].get("hours", {}).get(DAYS[d.weekday()])
-                )
+            or (
+                r["effective_from"] <= limit_date
+                if inclusive
+                else r["effective_from"] < limit_date
             )
-        best = max(
-            rows,
+        ]
+        if not eligible:
+            return self.entities[eid].get("hours", {})
+        return max(
+            eligible,
             key=lambda r: "0000-00-00"
             if r["effective_from"] == "before-2024"
             else r["effective_from"],
+        )["hours"]
+
+    def regular_hours(self, eid: str, d: date) -> str:
+        hours_dict = self._effective_regular_hours_dict(
+            eid, self.cutoff[:10], inclusive=False
         )
         return canonical_hours(
-            day_to_hours_string(best["hours"].get(DAYS[d.weekday()]))
+            day_to_hours_string(hours_dict.get(DAYS[d.weekday()]))
         )
 
     def holiday_entry(self, eid: str, d: date, as_of: datetime) -> Optional[str]:
@@ -1524,25 +1518,16 @@ class DataStore:
         return self.listings.get(eid, [])
 
     def same_week(self, eid, old, target):
-        def week_at(day):
-            eligible = [
-                r
-                for r in self.regular.get(eid, [])
-                if r["effective_from"] == "before-2024"
-                or r["effective_from"] <= min(day, self.cutoff[:10])
-            ]
-            if not eligible:
-                return self.entities[eid].get("hours", {})
-            return max(
-                eligible,
-                key=lambda r: "0000"
-                if r["effective_from"] == "before-2024"
-                else r["effective_from"],
-            )["hours"]
-
+        limit = self.cutoff[:10]
+        old_hours = self._effective_regular_hours_dict(
+            eid, min(old, limit), inclusive=True
+        )
+        target_hours = self._effective_regular_hours_dict(
+            eid, min(target, limit), inclusive=True
+        )
         return all(
-            day_to_hours_string(week_at(old).get(w))
-            == day_to_hours_string(week_at(target).get(w))
+            day_to_hours_string(old_hours.get(w))
+            == day_to_hours_string(target_hours.get(w))
             for w in DAYS
         )
 

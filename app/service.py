@@ -43,6 +43,13 @@ class AppError(Exception):
         super().__init__(message)
 
 
+def check_idempotency_key(key: str | None) -> None:
+    if not key or len(key) > 200:
+        raise AppError(
+            400, "IDEMPOTENCY_KEY_REQUIRED", "A valid Idempotency-Key is required."
+        )
+
+
 def digest(v):
     return hashlib.sha256(v.encode()).hexdigest()
 
@@ -224,6 +231,9 @@ class Service:
             raise AppError(404, "BUSINESS_NOT_FOUND", "Business not found.")
         return e
 
+    def _timezone(self, eid):
+        return self._entity(eid).get("timezone", "Europe/Helsinki")
+
     def target(self, eid):
         if self.mode == "sandbox":
             if eid != self.source_id:
@@ -307,7 +317,7 @@ class Service:
                     entity_id=eid,
                     business_name=e.get("name", eid),
                     country=e["meta"]["countryCode"],
-                    timezone=e.get("timezone", "Europe/Helsinki"),
+                    timezone=self._timezone(eid),
                     segment=e.get("c_segment", ""),
                     profile="DIRECT"
                     if has
@@ -345,7 +355,7 @@ class Service:
             if opt
             else compute_next_contact_at(
                 self.now(),
-                e.get("timezone", "Europe/Helsinki"),
+                self._timezone(eid),
                 c.get("best_contact_window", "10-12"),
                 freq,
             ),
@@ -836,10 +846,7 @@ class Service:
         return r
 
     def _idempotent(self, key, body):
-        if not key or len(key) > 200:
-            raise AppError(
-                400, "IDEMPOTENCY_KEY_REQUIRED", "A valid Idempotency-Key is required."
-            )
+        check_idempotency_key(key)
         old = self.store.data["idempotency"].get(key)
         if old and old["hash"] != fingerprint(body):
             raise AppError(

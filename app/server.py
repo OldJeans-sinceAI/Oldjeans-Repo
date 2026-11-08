@@ -135,6 +135,18 @@ class Handler(BaseHTTPRequestHandler):
                 },
             )
 
+    def _query_int(self, q, key, default, min_val=None, max_val=None):
+        val = int(q.get(key, [str(default)])[0])
+        if min_val is not None:
+            val = max(min_val, val)
+        if max_val is not None:
+            val = min(max_val, val)
+        return val
+
+    def _query_str(self, q, key, default=None):
+        vals = q.get(key)
+        return vals[0] if vals else default
+
     def handle_request(self, method):
         try:
             path = unquote(urlparse(self.path).path)
@@ -364,9 +376,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.validate("FleetContactRequest", b)
                 return self.reply(202, self.server.fleet.prepare_contacts(jid, b))
         if path.endswith("/businesses") and method == "GET":
-            limit = max(1, min(100, int(q.get("limit", ["50"])[0])))
-            offset = max(0, int(q.get("offset", ["0"])[0]))
-            return self.reply(200, s.businesses(q.get("q", [""])[0], offset, limit))
+            limit = self._query_int(q, "limit", 50, min_val=1, max_val=100)
+            offset = self._query_int(q, "offset", 0, min_val=0)
+            return self.reply(200, s.businesses(self._query_str(q, "q", ""), offset, limit))
         if path.endswith("/cycles") and method == "POST":
             self.validate("CycleRequest", b)
             return self.reply(200, s.cycle(b))
@@ -380,10 +392,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(
                     200,
                     s.messages(
-                        q.get("entity_id", [None])[0],
-                        max(0, int(q.get("offset", ["0"])[0])),
-                        max(1, min(100, int(q.get("limit", ["50"])[0]))),
-                        q.get("delivery_mode", [None])[0],
+                        self._query_str(q, "entity_id"),
+                        self._query_int(q, "offset", 0, min_val=0),
+                        self._query_int(q, "limit", 50, min_val=1, max_val=100),
+                        self._query_str(q, "delivery_mode"),
                     ),
                 )
             if method == "POST":
