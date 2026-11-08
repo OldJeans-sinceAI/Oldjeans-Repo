@@ -1,6 +1,7 @@
 """Keep simulator truth in the separate supplied mock API process."""
 
-import os, sys
+import os
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]

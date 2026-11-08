@@ -1,7 +1,11 @@
 """Application orchestration. Fixed Yext schema; local state is kept separately."""
 
 from __future__ import annotations
-import copy, hashlib, json, os, secrets
+import copy
+import hashlib
+import json
+import os
+import secrets
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlparse
@@ -36,6 +40,9 @@ from .domain import (
     dispatch_datetime,
     is_proposal_active,
 )
+from .storage import StateStore
+from .replies import OwnerReplies
+from examples.yext_client import YextClient
 
 DEFAULT_YEXT_API_VERSION = "20261106"
 DEFAULT_TIMEZONE = "Europe/Helsinki"
@@ -44,9 +51,6 @@ DEFAULT_FREQUENCY = "TWICE_MONTHLY"
 PROPOSAL_TTL_DAYS = 14
 PERMISSION_MAX_TTL_DAYS = 365
 SANDBOX_HOST_DOMAIN = "sbx-api.yextapis.com"
-from .storage import StateStore
-from .replies import OwnerReplies
-from examples.yext_client import YextClient
 
 
 def effective(hours, day):

@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """Start the reference site and its own isolated local Yext mock."""
 
-import argparse, fcntl, os, socket, subprocess, sys, time, threading
+import argparse
+import fcntl
+import os
+import socket
+import subprocess
+import sys
+import threading
+import time
 from pathlib import Path
 from dotenv import load_dotenv
 
