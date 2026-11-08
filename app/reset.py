@@ -18,7 +18,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from .domain import merge_change_into_hours
-from .service import AppError, check_idempotency_key, fingerprint
+from .errors import AppError, check_idempotency_key, fingerprint
 from .storage import StateStore
 
 

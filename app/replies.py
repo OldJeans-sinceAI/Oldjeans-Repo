@@ -2,7 +2,7 @@
 
 import os
 import re
-from .domain import interpret_reply, canonical_hours, HoursError, _ready_edit, _needs
+from .domain import interpret_reply, canonical_hours, HoursError, ready_edit, needs_clarification
 from .teammate.reply_engine import ReplyEngine, DEFAULT_MODEL
 
 
@@ -42,7 +42,7 @@ class OwnerReplies:
 		if is_exact_reply:
 			rule_result = interpret_reply(text, language, proposal)
 			if multiple and rule_result.get("intent") == "APPROVE":
-				rule_result = _needs(
+				rule_result = needs_clarification(
 					"Choose the date this reply applies to.", ["date"]
 				)
 			return {
@@ -56,7 +56,7 @@ class OwnerReplies:
 		if not self.engine.configured:
 			# Preserve strict offline preview; do not parse complex conditional text as consent.
 			return {
-				**_needs("Use the buttons or enter exact hours.", ["hours"]),
+				**needs_clarification("Use the buttons or enter exact hours.", ["hours"]),
 				"interpretation": {
 					"provider": "RULES",
 					"latency_ms": 0,
@@ -87,7 +87,7 @@ class OwnerReplies:
 			if proposal["change"]["kind"] == "REOPEN_DATE"
 			else ["hours"]
 		)
-		draft = _needs("Confirm the exact change using the editor.", missing_fields)
+		draft = needs_clarification("Confirm the exact change using the editor.", missing_fields)
 		target_date = proposal["change"].get("date")
 		mentioned_dates = re.findall(r"\d{4}-\d{2}-\d{2}", text)
 		if (
@@ -102,7 +102,7 @@ class OwnerReplies:
 				multiple and engine_reply.intent == "APPLY" and target_date not in mentioned_dates
 			):
 				return {
-					**_needs("Choose the date this reply applies to.", ["date"]),
+					**needs_clarification("Choose the date this reply applies to.", ["date"]),
 					"interpretation": meta,
 				}
 			intent_code = "APPROVE" if engine_reply.intent == "APPLY" else "REJECT"
@@ -124,7 +124,7 @@ class OwnerReplies:
 		):
 			try:
 				hours = canonical_hours(engine_reply.hours)
-				draft = _ready_edit(
+				draft = ready_edit(
 					proposal,
 					proposal["version"],
 					target_date,

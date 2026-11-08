@@ -6,7 +6,7 @@ import threading
 import time
 from pathlib import Path
 from .storage import StateStore
-from .service import AppError
+from .errors import AppError
 from .domain import parse_dt, is_proposal_active
 
 

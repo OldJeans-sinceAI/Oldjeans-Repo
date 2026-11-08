@@ -9,7 +9,10 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from http.cookies import SimpleCookie, CookieError
 from urllib.parse import urlparse, parse_qs, unquote
 from jsonschema import Draft202012Validator, FormatChecker
-from .service import AppError, digest
+from .errors import AppError, digest, fingerprint
+from .evaluate import export_text
+from .fleet import FleetRunner
+from .reset import ResetManager
 from .domain import HoursError
 from .storage import StateError
 from contextlib import nullcontext
@@ -27,11 +30,7 @@ class WebServer(ThreadingHTTPServer):
     def __init__(self, address, service, sandbox_service=None):
         self.service = service
         self.sandbox_service = sandbox_service
-        from .fleet import FleetRunner
-
         self.fleet = FleetRunner(service)
-        from .reset import ResetManager
-
         self.reset = ResetManager(service, self.fleet)
         self.sandbox_reset = ResetManager(sandbox_service) if sandbox_service else None
         self.contract = json.loads(
@@ -419,8 +418,6 @@ class Handler(BaseHTTPRequestHandler):
                     201, self.mutate(s, path, b, lambda: s.create_message(b))
                 )
         if path.endswith("/export.csv") and method == "GET":
-            from .evaluate import export_text
-
             return self.reply(
                 200,
                 export_text(s.data, s.root),
@@ -524,8 +521,6 @@ class Handler(BaseHTTPRequestHandler):
             result = fn()
             # Responses carrying raw capabilities are not persisted. Mint a fresh one on replay.
             saved = {k: v for k, v in result.items() if k != "owner_entry_path"}
-            from .service import fingerprint
-
             s.store.data["idempotency"][key] = {
                 "hash": fingerprint(request),
                 "result": saved,
