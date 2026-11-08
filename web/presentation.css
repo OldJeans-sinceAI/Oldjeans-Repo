@@ -71,15 +71,17 @@
 .pt-owner-help { font-size: 13px; line-height: 1.6; color: #667b6f; }
 .pt-error { border: 1px solid #eccda2; background: #fff5e7; color: #895314; border-radius: 12px; padding: 16px; margin: 15px 0; line-height: 1.6; font-size: 13px; }
 .pt-error button { margin: 10px; background: white; }
-.pt-content:has(.pt-owner-view) { display: grid; grid-template-columns: minmax(220px,.75fr) minmax(420px,1.25fr); gap: 30px; align-items: center; }
+.pt-content:has(.pt-owner-view) { display: grid; grid-template-columns: minmax(220px,.75fr) minmax(360px,1.25fr); gap: 30px; align-items: center; }
 .pt-content:has(.pt-channel-email) { grid-template-columns: 1fr; gap: 0; }
 .pt-owner-title h1 { font-size: clamp(30px,3.3vw,46px); }
 .pt-owner-view { min-width: 0; }
 .pt-owner-view#whatsapp-demo, .pt-owner-view#sms-demo { width: 100%; max-width: 560px; margin: 0; }
-.pt-shell #whatsapp-demo .wa-window, .pt-shell #sms-demo .cm-phone { height: min(760px, calc(100dvh - 420px)); min-height: 440px; margin: 0 auto; }
+/* Size the hardware from its width, never from the viewport's remaining height.
+   The page can scroll; only the conversation scrolls inside each device. */
+.pt-shell #whatsapp-demo .wa-window, .pt-shell #sms-demo .cm-phone { width: min(100%, 380px); height: auto; min-height: 0; aspect-ratio: 1 / 2; margin: 0 auto; }
 .pt-shell #whatsapp-demo .wa-chat, .pt-shell #sms-demo .cm-sms-thread { scrollbar-width: thin; }
 .pt-shell #whatsapp-demo .wa-messages .chip { margin-top: 2px; }
-.pt-shell #whatsapp-demo .bubble { font-size: 12px; }
+.pt-shell #whatsapp-demo .bubble { font-size: 13px; }
 .pt-shell #whatsapp-demo .wa-evidence { display: none; }
 .pt-shell #whatsapp-demo .wa-privacy { display: none; }
 .pt-shell #whatsapp-demo .wa-choice-help { display: none; }
@@ -89,14 +91,18 @@
 .pt-content:has(.pt-channel-email) .pt-owner-title { margin-bottom: 20px; }
 .pt-content:has(.pt-channel-email) .pt-owner-title h1 { font-size: 32px; margin-bottom: 10px; }
 .pt-content:has(.pt-channel-email) .pt-owner-title > p:last-child { font-size: 13px; }
-.pt-shell #email-demo .cm-monitor { max-width: 1180px; margin: 0 auto; }
-.pt-shell #email-demo .cm-email { height: min(570px, calc(100dvh - 620px)); min-height: 260px; }
+.pt-shell #email-demo .cm-monitor { max-width: 960px; margin: 0 auto; }
+.pt-shell #email-demo .cm-email { height: auto; min-height: 0; aspect-ratio: 16 / 10; }
 .pt-shell #email-demo .cm-email-layout { min-height: 0; }
 .pt-shell #email-demo .cm-email-reading { max-height: 100%; }
-.pt-shell #email-demo .cm-monitor-stand { height: 20px; }
+.pt-shell #email-demo .cm-monitor-stand { height: 40px; }
 .pt-shell #email-demo .cm-monitor-foot { height: 9px; }
 .pt-shell #email-demo .cm-email-body { font-size: 13px; }
 .pt-shell #email-demo .cm-email-heading h2 { font-size: 18px; }
+/* Decide has no Next button. Keep its guidance in the page so it cannot cover
+   the device's reply composer, especially with browser zoom or short windows. */
+.pt-shell:has(.pt-owner-view) { padding-bottom: 32px; }
+.pt-shell:has(.pt-owner-view) .pt-controls { position: static; margin-top: 28px; padding: 20px 0; background: none; box-shadow: none; backdrop-filter: none; }
 .pt-result { text-align: center; }
 .pt-result-symbol { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; background: #dcebbf; color: #285638; font-size: 34px; margin: 0 auto 24px; }
 .pt-before-after { display: flex; justify-content: center; align-items: center; gap: 35px; padding: 10px 0; }
@@ -128,9 +134,18 @@
   .pt-controls { padding: 14px 22px; }
   .pt-controls .pt-next { min-width: 125px; }
   .pt-controls p { font-size: 11px; }
-  .pt-shell #email-demo .cm-email { height: 650px; min-height: 0; }
-  .pt-shell #email-demo .cm-email-layout { min-height: 0; }
-  .pt-shell #whatsapp-demo .wa-window,.pt-shell #sms-demo .cm-phone { height: 700px; min-height: 0; }
+}
+@media (max-width: 700px) {
+  /* A narrow window shows the mail client directly. Do not stretch a desktop
+     monitor into portrait or shrink its text just to preserve decorative chrome. */
+  .pt-shell #email-demo .cm-monitor-bezel { padding: 0; border: 1px solid #ccd3d9; border-radius: 10px; overflow: hidden; }
+  .pt-shell #email-demo .cm-monitor-camera,
+  .pt-shell #email-demo .cm-monitor-chin,
+  .pt-shell #email-demo .cm-monitor-stand,
+  .pt-shell #email-demo .cm-monitor-foot { display: none; }
+  .pt-shell #email-demo .cm-email { height: 600px; aspect-ratio: auto; border: 0; }
+  .pt-shell #email-demo .cm-email-layout { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .pt-shell #email-demo .cm-email-list { display: none; }
 }
 @media (max-width: 520px) {
   .pt-shell { padding-left: 14px; padding-right: 14px; }
