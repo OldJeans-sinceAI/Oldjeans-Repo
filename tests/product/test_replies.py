@@ -120,18 +120,20 @@ class RepliesTests(unittest.TestCase):
 
     def test_multilingual_exact_replies(self):
         a, _ = self.adapter()
-        for text, intent in [
-            ("ja", "APPROVE"),
-            ("nej", "REJECT"),
-            ("nei", "REJECT"),
-            ("네", "APPROVE"),
-            ("아니요", "REJECT"),
-            ("suljettu", "EDIT"),
-            ("closed", "EDIT"),
+        for text, language, intent in [
+            ("ja", "sv", "APPROVE"),
+            ("nej", "sv", "REJECT"),
+            ("nei", "nb", "REJECT"),
+            ("네", "ko", "APPROVE"),
+            ("아니요", "ko", "REJECT"),
+            ("suljettu", "fi", "EDIT"),
+            ("closed", "en", "EDIT"),
         ]:
-            with self.subTest(text=text):
-                res = a.interpret(text, "sv", P)
+            with self.subTest(text=text, language=language):
+                res = a.interpret(text, language, P)
                 self.assertEqual(res["intent"], intent)
+                self.assertEqual(res["status"], "READY")
+                self.assertEqual(res["interpretation"]["provider"], "RULES")
 
     def test_health_response(self):
         a, _ = self.adapter(configured=True)

@@ -57,7 +57,7 @@ def parse_intervals(spec: str) -> list[tuple[int, int]]:
     """Parses a hours specification string into a list of (start_minutes, end_minutes) tuples.
 
     Rules & Edge Cases:
-    - 'closed' or empty string -> []
+    - 'closed' -> []; an empty string is rejected as unspecified hours.
     - Standard range '09:00-17:00' -> [(540, 1020)]
     - Overnight range (e.g., '22:00-02:00'): because end <= start, 1440 minutes (24h) is added
       to end_minutes -> [(1320, 1560)]. This allows overnight intervals to span across midnight

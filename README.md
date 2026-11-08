@@ -80,6 +80,9 @@ With those credentials configured, run:
 .venv/bin/python run_demo.py --presentation --mode mock --with-sandbox
 ```
 
+This keeps the scripted mock presentation at `/` and the manual real-Yext workspace
+at `/sandbox/`. The Next-button script never approves a sandbox update.
+
 ## Build status (scope of this document)
 
 This branch includes the Next-button presentation, the interactive guided journey,
@@ -87,7 +90,7 @@ the operator workspace, a WhatsApp phone, an SMS phone and an email desktop mail
 WhatsApp uses message buttons. Email and SMS use replies plus a confirmation preview;
 they do not pretend to support embedded decision buttons.
 
-The integration passed **95 product tests** on **8 Nov 2026**. Browser checks exercise
+The integration passed **109 product tests** on **8 Nov 2026**. Browser checks exercise
 the actual 3,032-entity scan, approve/edit/decline, independent mock read-back, reload,
 repeat rehearsals and unavailable-backend handling. Tests use isolated mock state;
 they do not send real messages or repeat the live sandbox write. The browser scripts

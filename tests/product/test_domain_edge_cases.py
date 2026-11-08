@@ -56,7 +56,9 @@ class DomainEdgeCasesTests(unittest.TestCase):
 	def test_validate_hours(self):
 		self.assertEqual(validate_hours("closed"), "closed")
 		self.assertEqual(validate_hours("09:00-17:00"), "09:00-17:00")
-		self.assertEqual(validate_hours(""), "closed")
+		# An omitted time is not an explicit instruction to close the business.
+		with self.assertRaises(HoursError):
+			validate_hours("")
 		with self.assertRaises(HoursError):
 			validate_hours("invalid-time")
 
