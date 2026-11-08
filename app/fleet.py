@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from .storage import StateStore
 from .service import AppError
-from .domain import parse_dt
+from .domain import parse_dt, is_proposal_active
 
 
 class FleetRunner:
@@ -161,11 +161,7 @@ class FleetRunner:
                 for cid in case_ids:
                     c = self.s.store.get("cases", cid)
                     p = self.s.store.get("proposals", c.get("proposal_id", ""))
-                    if (
-                        p
-                        and p["decision_status"] == "PENDING"
-                        and parse_dt(p["expires_at"]) > self.s.now()
-                    ):
+                    if p and is_proposal_active(p, self.s.now()):
                         ready.append(p)
             self._update(
                 jid,
@@ -223,11 +219,7 @@ class FleetRunner:
                     if c
                     else None
                 )
-                if (
-                    p
-                    and p["decision_status"] == "PENDING"
-                    and parse_dt(p["expires_at"]) > self.s.now()
-                ):
+                if p and is_proposal_active(p, self.s.now()):
                     groups.setdefault(p["entity_id"], []).append(p["proposal_id"])
         counts = {}
         message_ids = []

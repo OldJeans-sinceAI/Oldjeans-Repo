@@ -15,6 +15,7 @@ import os
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
+from math import atan2, cos, radians, sin, sqrt
 from typing import Optional
 
 from . import POLICY
@@ -237,6 +238,18 @@ def parse_dt(value: str) -> datetime:
 
 def iso_utc(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    a = (
+        sin(radians(lat2 - lat1) / 2) ** 2
+        + cos(radians(lat1)) * cos(radians(lat2)) * sin(radians(lon2 - lon1) / 2) ** 2
+    )
+    return 6371000 * 2 * atan2(sqrt(a), sqrt(max(0, 1 - a)))
+
+
+def is_proposal_active(p: dict, now: datetime) -> bool:
+    return p.get("decision_status") == "PENDING" and parse_dt(p["expires_at"]) > now
 
 
 def _get_timezone(name: str):
@@ -1506,18 +1519,12 @@ class DataStore:
         city = e.get("address", {}).get("city", "")
         geo = e.get("geocodedCoordinate") or e.get("displayCoordinate") or {}
         lat, lon = geo.get("latitude"), geo.get("longitude")
-        from math import radians, sin, cos, atan2, sqrt
 
         def nearby(event):
             point = event.get("location", {}).get("position", {}).get("coordinates", [])
             if lat is None or lon is None or len(point) != 2:
                 return False
-            y, x = point[1], point[0]
-            a = (
-                sin(radians(y - lat) / 2) ** 2
-                + cos(radians(lat)) * cos(radians(y)) * sin(radians(x - lon) / 2) ** 2
-            )
-            return 6371000 * 2 * atan2(sqrt(a), sqrt(max(0, 1 - a))) <= 1000
+            return haversine_distance(lat, lon, point[1], point[0]) <= 1000
 
         if ctx.segment in ("restaurant", "lunch_restaurant", "pizzeria", "bar_pub"):
             for event in self.events_by_day.get((ctx.country, ctx.target_date), []):
@@ -1652,8 +1659,6 @@ class DataStore:
         }
 
     def neighbour_context(self, ctx, entity):
-        from math import radians, sin, cos, atan2, sqrt
-
         coord = entity.get("geocodedCoordinate", {})
         if not all(k in coord for k in ("latitude", "longitude")):
             return
@@ -1668,13 +1673,9 @@ class DataStore:
                     or not all(k in point for k in ("latitude", "longitude"))
                 ):
                     continue
-                a = (
-                    sin(radians(point["latitude"] - coord["latitude"]) / 2) ** 2
-                    + cos(radians(coord["latitude"]))
-                    * cos(radians(point["latitude"]))
-                    * sin(radians(point["longitude"] - coord["longitude"]) / 2) ** 2
+                distance = haversine_distance(
+                    coord["latitude"], coord["longitude"], point["latitude"], point["longitude"]
                 )
-                distance = 6371000 * 2 * atan2(sqrt(a), sqrt(max(0, 1 - a)))
                 if distance <= 1000:
                     found.append((distance, eid))
             self._neighbour_ids[ctx.entity_id] = [eid for _, eid in sorted(found)]
