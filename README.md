@@ -1,86 +1,72 @@
-# Näkyvyystesti (Windows)
+# Connect Suggests – Customer Approves · Nordic Opening-Hours Simulator
 
-Fonectan näkyvyystestin kaltainen paikallinen työkalu. Se tarkistaa, löytyykö yritys yhdeksästä kanavasta (Google Maps, Fonecta, Facebook, LinkedIn, Finder, Kauppalehti, Asiakastieto, Instagram, arvostelusivustot), ja arvioi yrityksen oman verkkosivuston tekniset perusasiat. Lopuksi se antaa pisteet (0-100), tärkeysjärjestetyn korjauslistan sekä ladattavan HTML- ja JSON-raportin.
+A simulator framework and API backend for automated opening-hours suggestion, verification, and Yext integration for Nordic business locations.
 
-## Asennus ja käynnistys
+## Overview
 
-```powershell
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
+This project provides an end-to-end framework to evaluate, suggest, and publish business holiday and special opening hours across Finland, Sweden, and Norway. It integrates with Yext APIs (or local mock services) to maintain findability and accuracy for business listings.
 
-```
+## Requirements
 
-Jos aktivointi estyy, ohita kaksi ensimmäistä riviä ja aja asennus ja käynnistys suoraan `py -m`-komennoilla.
+### Python Requirements
+- **Python 3.9+**
+- Install dependencies specified in `requirements.txt`:
+  ```bash
+  python -m venv .venv
+  source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1
+  pip install -r requirements.txt
+  ```
 
-## Node-versionhallinta (nvm)
+### Node.js Requirements
+- **Node.js v20.11.0** (locked via `.nvmrc`, `package.json`, `.npmrc`)
+- Use `nvm` to manage Node versions:
+  ```bash
+  nvm install
+  nvm use
+  npm ci
+  ```
 
-Projekti käyttää Node-versiota, joka on lukittu tiedostoon `.nvmrc` (`20.11.0`). Sama versio on käytössä GitHub Actions -testissä, ja `package.json`:n `engines`-kenttä sekä `.npmrc`:n `engine-strict=true` estävät asennuksen väärällä versiolla.
+## Environment Setup
 
-Kertaluonteinen asennus (macOS / Linux / WSL):
-
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.bashrc   # tai ~/.zshrc
-nvm --version      # tulee näyttää versionumeron
-```
-
-Windows (PowerShell): nvm ei toimi suoraan, asenna [nvm-windows](https://github.com/coreybutler/nvm-windows) ja aja `nvm install 20.11.0` sekä `nvm use 20.11.0` (nvm-windows ei lue `.nvmrc`-tiedostoa automaattisesti).
-
-Projektin Node-version käyttöönotto (projektin juuressa):
-
-```bash
-nvm install    # asentaa .nvmrc:n version, jos puuttuu
-nvm use        # vaihtaa siihen
-node -v        # tulee näyttää v20.11.0
-```
-
-## Testit
-
-1. Luo `.env` mallin pohjalta ja täytä omat avaimesi (`.env` on `.gitignore`:ssa, eikä sitä viedä GitHubiin):
+Create your local `.env` file from the template `env_mockup`:
 
 ```bash
 cp env_mockup .env
 ```
 
-2. Asenna riippuvuudet ja aja yhteystesti:
+Configure your environment variables in `.env` (e.g. `YEXT_API_KEY`, `YEXT_BASE_URL`).
 
+## Running the API Server
+
+Start the API backend server using either the simulator backend or the mock Yext API server:
+
+- **Simulator App Server**:
+  ```bash
+  python -m app.server
+  ```
+- **Mock API Server**:
+  ```bash
+  python mock_api/server.py
+  ```
+
+The server runs locally by default (e.g., `http://localhost:8787`).
+
+## Testing & Evaluation
+
+### Yext Connection / Integration Test
+Run the Yext API integration test (Node.js):
 ```bash
-nvm use
-npm ci
 npm run test:yext
 ```
 
-Testin onnistumiseen projektisi juuressa tulee olla `.env`-tiedosto oikeilla avaimilla. Onnistuessaan testi tulostaa `✅ Success!` ja yrityksen nimen. GitHubissa sama testi ajetaan automaattisesti `main`-haaraan pushatessa ja pull requestissa (`.github/workflows/backend-test.yml`), avaimet haetaan repositoryn secreteistä.
+### Evaluation & Scoring
+Run the Python evaluation suite to score predictions against benchmark datasets:
+```bash
+python evaluation/evaluate.py
+```
+To run baseline predictions and score the output:
+```bash
+python baseline.py
+python evaluation/evaluate.py --predictions outputs/baseline_predictions_2026.csv
+```
 
-## Komento-opas
-
-| Tarkoitus | Komento |
-| --- | --- |
-| Tarkista nvm | `nvm --version` |
-| Asenna projektin Node-versio (.nvmrc) | `nvm install` |
-| Ota projektin Node-versio käyttöön | `nvm use` |
-| Näytä aktiivinen Node / npm | `node -v` / `npm -v` |
-| Näytä asennetut Node-versiot | `nvm ls` |
-| Aseta oletusversio uusiin terminaaleihin | `nvm alias default 20.11.0` |
-| Asenna riippuvuudet lukitusta lockfilesta (suositus) | `npm ci` |
-| Asenna riippuvuudet ja päivitä lockfile | `npm install` |
-| Puhdas uudelleenasennus | `rm -rf node_modules && npm ci` |
-| Aja Yext-yhteystesti | `npm run test:yext` |
-| Luo `.env` mallista | `cp env_mockup .env` |
-
-Vianetsintä:
-
-- `nvm: command not found`: avaa terminaali uudelleen tai aja `source ~/.bashrc` (tai `~/.zshrc`).
-- `EBADENGINE` / "Unsupported engine": aja `nvm use` ja yritä uudelleen.
-- `Cannot find module 'dotenv'` tai `'axios'`: aja `npm ci`.
-- `❌ Connection failed` ja tyhjät arvot: tarkista, että `.env` on projektin juuressa ja avaimet on täytetty.
-- Versionvaihto: muuta numero `.nvmrc`-tiedostoon (ja tarvittaessa `engines`-kenttään `package.json`:ssa), aja `nvm install`, `nvm use` ja `npm ci`. Voit päivittää lockfilen vasta tämän jälkeen komennolla `npm install`.
-
-## Pisteytys
-
-- Kanavat 60 %: Google 20, Fonecta 15, Facebook 12, LinkedIn 10, Finder 8, Kauppalehti 8, Asiakastieto 7, Instagram 5, arvostelusivustot 5. Täysi osuma antaa koko painon, epävarma osuma 40 %.
-- Verkkosivusto 40 %: HTTPS ja aukeaminen 20, Schema.org 15, title, description, H1, viewport, puhelin ja paikkakunta 10 kutakin, robots.txt 5.
-
-## Rajoitukset
-
-- Löytyminen perustuu DDGS-hakuun, ei kanavien omiin rajapintoihin. Se voi jättää profiileja löytämättä, ja 
