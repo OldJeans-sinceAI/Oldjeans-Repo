@@ -118,6 +118,34 @@ class RepliesTests(unittest.TestCase):
             a.interpret("maybe five", "en", P)["status"], "NEEDS_CLARIFICATION"
         )
 
+    def test_multilingual_exact_replies(self):
+        a, _ = self.adapter()
+        for text, intent in [
+            ("ja", "APPROVE"),
+            ("nej", "REJECT"),
+            ("nei", "REJECT"),
+            ("네", "APPROVE"),
+            ("아니요", "REJECT"),
+            ("suljettu", "EDIT"),
+            ("closed", "EDIT"),
+        ]:
+            with self.subTest(text=text):
+                res = a.interpret(text, "sv", P)
+                self.assertEqual(res["intent"], intent)
+
+    def test_health_response(self):
+        a, _ = self.adapter(configured=True)
+        h = a.health()
+        self.assertEqual(h["provider"], "GEMINI")
+        self.assertTrue(h["configured"])
+        self.assertEqual(h["model"], "test")
+
+        a_off, _ = self.adapter(configured=False)
+        h_off = a_off.health()
+        self.assertEqual(h_off["provider"], "RULES")
+        self.assertFalse(h_off["configured"])
+        self.assertIsNone(h_off["model"])
+
 
 class ReplyServiceTests(unittest.TestCase):
     def setUp(self):

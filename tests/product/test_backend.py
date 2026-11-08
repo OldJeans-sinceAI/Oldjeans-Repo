@@ -216,8 +216,8 @@ class ProductTests(unittest.TestCase):
             p["proposal_id"], dict(decision="REJECT", proposal_version=1), "reject"
         )
         self.assertEqual(
-            self.proposal()["decision_status"], "REJECTED"
-        ) if False else None
+            self.s.proposal(p["proposal_id"])["decision_status"], "REJECTED"
+        )
         q = self.proposal(day="2026-12-31")
         self.s.fixed_now = parse_dt("2026-12-01T10:00:00Z")
         self.s.tick()
