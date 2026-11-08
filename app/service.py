@@ -697,6 +697,65 @@ class Service:
         self.store.put("cases", caseid, c)
         return copy.deepcopy(c)
 
+    def _evaluate_direct_schedule_detection(self, d, live):
+        direct = [
+            x
+            for x in d["evidence"]
+            if x["role"] == "DIRECT"
+            and x["source_file"] == "regular_hours_history.jsonl"
+            and parse_dt(x["known_at"]) <= self.now()
+        ]
+        rows = [
+            r
+            for r in self.data.regular.get(d["entity_id"], [])
+            if any(r["effective_from"] in x["source_record"] for x in direct)
+        ]
+        if not rows:
+            raise AppError(
+                422,
+                "DIRECT_SOURCE_REQUIRED",
+                "A matching own schedule record is required for this change.",
+            )
+        row = max(rows, key=lambda r: r["effective_from"])
+        baseline = copy.deepcopy(d["baseline"])
+        if baseline["kind"] == "WEEKLY_HOURS":
+            change = dict(
+                kind="WEEKLY_HOURS",
+                effective_from=baseline["effective_from"],
+                weekdays={
+                    wd: day_to_hours_string(row["hours"].get(wd))
+                    for wd in baseline["weekdays"]
+                },
+            )
+            baseline["weekdays"] = {
+                wd: day_to_hours_string(live.get("hours", {}).get(wd))
+                for wd in baseline["weekdays"]
+            }
+        else:
+            if not row["hours"].get("reopenDate"):
+                raise AppError(
+                    422,
+                    "REOPEN_SOURCE_REQUIRED",
+                    "Source must specify an exact reopening date.",
+                )
+            change = dict(
+                kind="REOPEN_DATE", reopen_date=row["hours"]["reopenDate"]
+            )
+        validate_change(change)
+        det = copy.deepcopy(d)
+        det["baseline"] = baseline
+        return dict(
+            action="SUGGEST",
+            status="PROPOSAL_READY",
+            reason_code="DIRECT_SCHEDULE",
+            summary="Own confirmed schedule supports this scoped change.",
+            detection=det,
+            change=change,
+            confidence="HIGH",
+            purpose="CORRECTION",
+            recheck=None,
+        )
+
     def ingest_detection(self, d):
         self._refresh_sources()
         # Internal callers provide structured evidence, never a client-chosen destination.
@@ -709,63 +768,7 @@ class Service:
         ctx = self._context(d["entity_id"], d["target_date"], live)
         out = evaluate_context(ctx, self.now())
         if d["baseline"]["kind"] in ("WEEKLY_HOURS", "REOPEN_DATE"):
-            direct = [
-                x
-                for x in d["evidence"]
-                if x["role"] == "DIRECT"
-                and x["source_file"] == "regular_hours_history.jsonl"
-                and parse_dt(x["known_at"]) <= self.now()
-            ]
-            rows = [
-                r
-                for r in self.data.regular.get(d["entity_id"], [])
-                if any(r["effective_from"] in x["source_record"] for x in direct)
-            ]
-            if not rows:
-                raise AppError(
-                    422,
-                    "DIRECT_SOURCE_REQUIRED",
-                    "A matching own schedule record is required for this change.",
-                )
-            row = max(rows, key=lambda r: r["effective_from"])
-            baseline = copy.deepcopy(d["baseline"])
-            if baseline["kind"] == "WEEKLY_HOURS":
-                change = dict(
-                    kind="WEEKLY_HOURS",
-                    effective_from=baseline["effective_from"],
-                    weekdays={
-                        wd: day_to_hours_string(row["hours"].get(wd))
-                        for wd in baseline["weekdays"]
-                    },
-                )
-                baseline["weekdays"] = {
-                    wd: day_to_hours_string(live.get("hours", {}).get(wd))
-                    for wd in baseline["weekdays"]
-                }
-            else:
-                if not row["hours"].get("reopenDate"):
-                    raise AppError(
-                        422,
-                        "REOPEN_SOURCE_REQUIRED",
-                        "Source must specify an exact reopening date.",
-                    )
-                change = dict(
-                    kind="REOPEN_DATE", reopen_date=row["hours"]["reopenDate"]
-                )
-            validate_change(change)
-            det = copy.deepcopy(d)
-            det["baseline"] = baseline
-            out = dict(
-                action="SUGGEST",
-                status="PROPOSAL_READY",
-                reason_code="DIRECT_SCHEDULE",
-                summary="Own confirmed schedule supports this scoped change.",
-                detection=det,
-                change=change,
-                confidence="HIGH",
-                purpose="CORRECTION",
-                recheck=None,
-            )
+            out = self._evaluate_direct_schedule_detection(d, live)
         elif (
             d["finding"] == "STATUS_CONCERN"
             and len([x for x in d["evidence"] if x["role"] == "COUNTER"]) >= 2
@@ -879,68 +882,9 @@ class Service:
                 )
             decision = b["decision"]
             change = copy.deepcopy(b.get("edited_change", p["change"]))
-            validate_change(change)
-            if change["kind"] == "REOPEN_DATE" and date.fromisoformat(
-                change["reopen_date"]
-            ) <= local_date(self.now(), p["timezone"]):
-                raise AppError(
-                    422, "INVALID_REOPEN_DATE", "Choose a future reopening date."
-                )
-            if change["kind"] != p["change"]["kind"]:
-                raise AppError(
-                    422, "SCOPE_CHANGE", "An edit cannot change the proposal type."
-                )
-            scopekey = {
-                "DATE_HOURS": "date",
-                "WEEKLY_HOURS": "effective_from",
-                "REOPEN_DATE": None,
-            }[change["kind"]]
-            if scopekey and change[scopekey] != p["change"][scopekey]:
-                raise AppError(
-                    422, "SCOPE_CHANGE", "An edit cannot change the target date."
-                )
-            if change["kind"] == "WEEKLY_HOURS" and set(change["weekdays"]) != set(
-                p["change"]["weekdays"]
-            ):
-                raise AppError(
-                    422, "SCOPE_CHANGE", "An edit cannot expand weekday scope."
-                )
+            self._validate_decision_change(p, change)
             if decision != "REJECT":
-                if self.mode == "sandbox" and not self.allow_writes:
-                    raise AppError(
-                        403,
-                        "SANDBOX_WRITES_DISABLED",
-                        "Sandbox writes are not enabled.",
-                    )
-                latest = self._read(p["entity_id"])
-                if (
-                    relevant_state_hash(
-                        scope_value(latest.get("hours", {}), p["change"])
-                    )
-                    != p["baseline_hash"]
-                ):
-                    raise AppError(
-                        409,
-                        "STALE_BASELINE",
-                        "Current hours changed since the proposal.",
-                    )
-                if p["change"]["kind"] == "DATE_HOURS" and not p.get(
-                    "_external_supported"
-                ):
-                    current = evaluate_context(
-                        self._context(p["entity_id"], p["change"]["date"], latest),
-                        self.now(),
-                    )
-                    if (
-                        current["action"] == "FLAG"
-                        or current.get("change") != p["change"]
-                    ):
-                        raise AppError(
-                            409,
-                            "EVIDENCE_CHANGED",
-                            "Supporting evidence changed; run a fresh review.",
-                        )
-                self._validate_adjacent(latest.get("hours", {}), change)
+                self._validate_decision_prerequisites(p, change)
             status = (
                 "STANDING_AUTHORIZED"
                 if standing
@@ -1018,6 +962,71 @@ class Service:
             self.store.save()
             return result
 
+    def _validate_decision_change(self, p, change):
+        validate_change(change)
+        if change["kind"] == "REOPEN_DATE" and date.fromisoformat(
+            change["reopen_date"]
+        ) <= local_date(self.now(), p["timezone"]):
+            raise AppError(
+                422, "INVALID_REOPEN_DATE", "Choose a future reopening date."
+            )
+        if change["kind"] != p["change"]["kind"]:
+            raise AppError(
+                422, "SCOPE_CHANGE", "An edit cannot change the proposal type."
+            )
+        scopekey = {
+            "DATE_HOURS": "date",
+            "WEEKLY_HOURS": "effective_from",
+            "REOPEN_DATE": None,
+        }[change["kind"]]
+        if scopekey and change[scopekey] != p["change"][scopekey]:
+            raise AppError(
+                422, "SCOPE_CHANGE", "An edit cannot change the target date."
+            )
+        if change["kind"] == "WEEKLY_HOURS" and set(change["weekdays"]) != set(
+            p["change"]["weekdays"]
+        ):
+            raise AppError(
+                422, "SCOPE_CHANGE", "An edit cannot expand weekday scope."
+            )
+
+    def _validate_decision_prerequisites(self, p, change):
+        if self.mode == "sandbox" and not self.allow_writes:
+            raise AppError(
+                403,
+                "SANDBOX_WRITES_DISABLED",
+                "Sandbox writes are not enabled.",
+            )
+        latest = self._read(p["entity_id"])
+        if (
+            relevant_state_hash(
+                scope_value(latest.get("hours", {}), p["change"])
+            )
+            != p["baseline_hash"]
+        ):
+            raise AppError(
+                409,
+                "STALE_BASELINE",
+                "Current hours changed since the proposal.",
+            )
+        if p["change"]["kind"] == "DATE_HOURS" and not p.get(
+            "_external_supported"
+        ):
+            current = evaluate_context(
+                self._context(p["entity_id"], p["change"]["date"], latest),
+                self.now(),
+            )
+            if (
+                current["action"] == "FLAG"
+                or current.get("change") != p["change"]
+            ):
+                raise AppError(
+                    409,
+                    "EVIDENCE_CHANGED",
+                    "Supporting evidence changed; run a fresh review.",
+                )
+        self._validate_adjacent(latest.get("hours", {}), change)
+
     def _validate_adjacent(self, hours, change):
         from .domain import parse_intervals
 
@@ -1072,14 +1081,9 @@ class Service:
             r.update(application_status=status, error_code=code, retryable=retryable)
             self.store.save()
 
-        if op.get("permission_id"):
-            perm = self.matching_permission(p)
-            if not perm or perm["permission_id"] != op["permission_id"]:
-                return fail("REVIEW_REQUIRED", "PERMISSION_REVOKED")
-        if self.mode == "sandbox" and not self.allow_writes:
-            return fail("REVIEW_REQUIRED", "SANDBOX_WRITES_DISABLED")
-        if self.mode == "sandbox" and p.get("target_entity_id") != self.target_id:
-            return fail("REVIEW_REQUIRED", "SANDBOX_TARGET_CHANGED")
+        err_code = self._check_apply_preconditions(op, p)
+        if err_code:
+            return fail("REVIEW_REQUIRED", err_code)
         for _ in range(3):
             try:
                 latest = self._read(p["entity_id"])
@@ -1126,6 +1130,17 @@ class Service:
             ):
                 return fail("CONFLICT", "UNEXPECTED_REMOTE_STATE")
         fail("FAILED", "WRITE_NOT_VERIFIED", True)
+
+    def _check_apply_preconditions(self, op, p):
+        if op.get("permission_id"):
+            perm = self.matching_permission(p)
+            if not perm or perm["permission_id"] != op["permission_id"]:
+                return "PERMISSION_REVOKED"
+        if self.mode == "sandbox" and not self.allow_writes:
+            return "SANDBOX_WRITES_DISABLED"
+        if self.mode == "sandbox" and p.get("target_entity_id") != self.target_id:
+            return "SANDBOX_TARGET_CHANGED"
+        return None
 
     def _verified(self, op):
         p = self.proposal(op["proposal_id"])
@@ -1177,63 +1192,71 @@ class Service:
                     p["decision_status"] = "EXPIRED"
                     p["allowed_decisions"] = []
             for m in self.store.data["messages"].values():
-                if (
-                    m["status"] == "QUEUED"
-                    and m["scheduled_at"]
-                    and parse_dt(m["scheduled_at"]) <= self.now()
-                ):
-                    pref = self.preferences(m["entity_id"])
-                    if pref["source_opted_out"]:
-                        m["status"] = "BLOCKED_OPT_OUT"
-                    elif pref["frequency"] == "PAUSED":
-                        m["status"] = "BLOCKED_PAUSED"
-                    elif any(
-                        self.proposal(pid)["decision_status"] == "EXPIRED"
-                        for pid in m["proposal_ids"]
-                    ):
-                        m["status"] = "EXPIRED"
-                    else:
-                        zone = self._entity(m["entity_id"]).get(
-                            "timezone", "Europe/Helsinki"
-                        )
-                        local = self.now().astimezone(_get_timezone(zone))
-                        window = pref["best_contact_window"]
-                        start, end = map(int, window.split("-"))
-                        if local.hour < start:
-                            m["scheduled_at"] = iso_utc(
-                                dispatch_datetime(local.date(), window, zone)
-                            )
-                        elif local.hour >= end:
-                            m["scheduled_at"] = iso_utc(
-                                dispatch_datetime(
-                                    local.date() + timedelta(days=1), window, zone
-                                )
-                            )
-                        else:
-                            m["status"] = "DELIVERED_SIMULATED"
+                self._tick_message(m)
             for op in list(self.store.data["operations"].values()):
-                if op["status"] == "PENDING" or (
-                    op["status"] == "FAILED"
-                    and self.proposal(op["proposal_id"])
-                    .get("_result", {})
-                    .get("error_code")
-                    == "READBACK_UNAVAILABLE"
-                ):
-                    self._apply(op)
-                elif op["status"] == "SCHEDULED":
-                    job = self.store.get("jobs", op["operation_id"])
-                    due = parse_dt(job["due_at"])
-                    if due <= self.now():
-                        if self.now() - due > timedelta(hours=24):
-                            op["status"] = "REVIEW_REQUIRED"
-                            self.proposal(op["proposal_id"])["_result"].update(
-                                application_status="REVIEW_REQUIRED",
-                                error_code="MISSED_JOB",
-                            )
-                        else:
-                            self._apply(op)
-                        job["status"] = op["status"]
+                self._tick_operation(op)
             self.store.save()
+
+    def _tick_message(self, m):
+        if (
+            m["status"] != "QUEUED"
+            or not m["scheduled_at"]
+            or parse_dt(m["scheduled_at"]) > self.now()
+        ):
+            return
+        from .domain import _get_timezone, dispatch_datetime
+        pref = self.preferences(m["entity_id"])
+        if pref["source_opted_out"]:
+            m["status"] = "BLOCKED_OPT_OUT"
+        elif pref["frequency"] == "PAUSED":
+            m["status"] = "BLOCKED_PAUSED"
+        elif any(
+            self.proposal(pid)["decision_status"] == "EXPIRED"
+            for pid in m["proposal_ids"]
+        ):
+            m["status"] = "EXPIRED"
+        else:
+            zone = self._entity(m["entity_id"]).get(
+                "timezone", "Europe/Helsinki"
+            )
+            local = self.now().astimezone(_get_timezone(zone))
+            window = pref["best_contact_window"]
+            start, end = map(int, window.split("-"))
+            if local.hour < start:
+                m["scheduled_at"] = iso_utc(
+                    dispatch_datetime(local.date(), window, zone)
+                )
+            elif local.hour >= end:
+                m["scheduled_at"] = iso_utc(
+                    dispatch_datetime(
+                        local.date() + timedelta(days=1), window, zone
+                    )
+                )
+            else:
+                m["status"] = "DELIVERED_SIMULATED"
+
+    def _tick_operation(self, op):
+        if op["status"] == "PENDING" or (
+            op["status"] == "FAILED"
+            and self.proposal(op["proposal_id"])
+            .get("_result", {})
+            .get("error_code")
+            == "READBACK_UNAVAILABLE"
+        ):
+            self._apply(op)
+        elif op["status"] == "SCHEDULED":
+            job = self.store.get("jobs", op["operation_id"])
+            due = parse_dt(job["due_at"])
+            if due <= self.now():
+                if self.now() - due > timedelta(hours=24):
+                    op["status"] = "REVIEW_REQUIRED"
+                    self.proposal(op["proposal_id"])["_result"].update(
+                        application_status="REVIEW_REQUIRED",
+                        error_code="MISSED_JOB",
+                    )
+                else:
+                    self._apply(op)
+                job["status"] = op["status"]
 
     def interpret(self, pid, b, multiple=False):
         p = copy.deepcopy(self.get_proposal(pid))
