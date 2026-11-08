@@ -938,6 +938,8 @@ const RESET_TEXT = {
 };
 for (const [locale, values] of Object.entries(RESET_TEXT)) Object.assign(words[locale], values);
 let state = {
+  booting: !IS_OWNER,
+  bootError: false,
   tab: APP_BASE || new URLSearchParams(location.search).get("view") === "workspace" ? "overview" : "demo",
   demo: newDemoState(),
   fleet: null,
@@ -1083,13 +1085,19 @@ function businessName(id) {
 function empty(title, desc) {
   return `<div class="empty"><div class="empty-icon">⌁</div><h3>${h(title)}</h3><p>${h(desc)}</p></div>`;
 }
+function renderStartup() {
+  const failed = state.bootError;
+  app.innerHTML = `<main class="loading" data-startup="${failed ? "error" : "loading"}" role="${failed ? "alert" : "status"}" aria-busy="${!failed}"><div><strong>Connect Suggests</strong><p>${failed ? "The app could not finish loading. Please retry." : '<span class="spinner" aria-hidden="true"></span>Loading your workspace…'}</p>${failed ? '<button class="primary" id="startup-retry">Retry</button>' : ""}</div></main>`;
+}
 function render() {
   document.documentElement.lang = lang;
   document.title = "Connect Suggests";
   if (IS_OWNER) return renderCustomer();
+  if (state.booting) return renderStartup();
   renderOperator();
 }
 function renderOperator() {
+  if (state.booting) return renderStartup();
   if (presentationActive()) return renderPresentation();
   const counts = Object.fromEntries(
     ["SUGGEST", "FLAG", "NO_ACTION"].map((a) => [
@@ -1592,7 +1600,9 @@ document.addEventListener("click", async (e) => {
   const old = b.innerHTML;
   try {
     b.disabled = true;
-    if (b.dataset.demoAction) {
+    if (b.id === "startup-retry") {
+      location.reload();
+    } else if (b.dataset.demoAction) {
       await handleDemoAction(b.dataset.demoAction);
     } else if (b.id === "reset-open") {
       await openReset();
@@ -1838,11 +1848,17 @@ dialog.addEventListener("click", (e) => {
       await refreshFleet();
       if (!APP_BASE) { await restoreDemo(); await maybeAdvanceToNextBusiness();
       if (presentationActive()) await initPresentation(); }
+      state.booting = false;
       render();
       if (sessionStorage.getItem("reset-complete" + APP_BASE)) { sessionStorage.removeItem("reset-complete" + APP_BASE); toast(t("resetSuccess")); }
     }
   } catch (e) {
-    render();
-    toast(errorText(e));
+    if (!IS_OWNER && state.booting) {
+      state.bootError = true;
+      renderStartup();
+    } else {
+      render();
+      toast(errorText(e));
+    }
   }
 })();
