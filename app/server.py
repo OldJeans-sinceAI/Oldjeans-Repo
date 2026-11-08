@@ -15,6 +15,11 @@ from .storage import StateError
 from contextlib import nullcontext
 
 
+MAX_REQUEST_SIZE = 65536
+DEFAULT_PAGE_LIMIT = 50
+MAX_PAGE_LIMIT = 100
+
+
 class WebServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
@@ -196,7 +201,6 @@ class Handler(BaseHTTPRequestHandler):
                 raise AppError(
                     403, "CSRF_REQUIRED", "A valid request token is required."
                 )
-        MAX_REQUEST_SIZE = 65536
         size = int(self.headers.get("Content-Length", "0"))
         if size > MAX_REQUEST_SIZE:
             raise AppError(413, "REQUEST_TOO_LARGE", "Request is too large.")
@@ -387,7 +391,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.validate("FleetContactRequest", b)
                 return self.reply(202, self.server.fleet.prepare_contacts(jid, b))
         if path.endswith("/businesses") and method == "GET":
-            limit = self._query_int(q, "limit", 50, min_val=1, max_val=100)
+            limit = self._query_int(q, "limit", DEFAULT_PAGE_LIMIT, min_val=1, max_val=MAX_PAGE_LIMIT)
             offset = self._query_int(q, "offset", 0, min_val=0)
             return self.reply(200, s.businesses(self._query_str(q, "q", ""), offset, limit))
         if path.endswith("/cycles") and method == "POST":
@@ -405,7 +409,7 @@ class Handler(BaseHTTPRequestHandler):
                     s.messages(
                         self._query_str(q, "entity_id"),
                         self._query_int(q, "offset", 0, min_val=0),
-                        self._query_int(q, "limit", 50, min_val=1, max_val=100),
+                        self._query_int(q, "limit", DEFAULT_PAGE_LIMIT, min_val=1, max_val=MAX_PAGE_LIMIT),
                         self._query_str(q, "delivery_mode"),
                     ),
                 )

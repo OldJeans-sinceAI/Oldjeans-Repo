@@ -21,6 +21,12 @@ from typing import Optional
 from . import POLICY
 
 DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+HOURS_CLOSED = "closed"
+MINUTES_PER_DAY = 1440
+EARTH_RADIUS_METERS = 6371000
+DEFAULT_EPOCH_ISO = "1970-01-01T00:00:00Z"
+WINDOW_START_HOURS = {"08-10": 8, "10-12": 10, "12-16": 12, "16-20": 16}
+DEFAULT_WINDOW_START_HOUR = 10
 
 # --------------------------------------------------------------------------- hours
 
@@ -37,12 +43,12 @@ def _time_to_minutes(t: str) -> int:
 
 
 def _minutes_to_time(m: int) -> str:
-    m %= 1440
+    m %= MINUTES_PER_DAY
     return f"{m // 60:02d}:{m % 60:02d}"
 
 
 def _format_interval_end(e: int) -> str:
-    return "23:59" if e == 1439 else _minutes_to_time(e)
+    return "23:59" if e == MINUTES_PER_DAY - 1 else _minutes_to_time(e)
 
 
 def parse_intervals(spec: str) -> list[tuple[int, int]]:
@@ -53,7 +59,7 @@ def parse_intervals(spec: str) -> list[tuple[int, int]]:
     overlap - including the next-date overlap created by an overnight tail.
     """
     s = (spec or "").strip().lower()
-    if s == "closed":
+    if s == HOURS_CLOSED:
         return []
     if not s:
         raise HoursError("hours must be explicit")
@@ -71,7 +77,7 @@ def parse_intervals(spec: str) -> list[tuple[int, int]]:
                 f"interval {part!r} is zero length; use 00:00-23:59 for 24 hours"
             )
         if end_minutes < start_minutes and not (a == "00:00" and b == "23:59"):
-            end_minutes += 1440  # overnight rollover into the next date
+            end_minutes += MINUTES_PER_DAY  # overnight rollover into the next date
         out.append((start_minutes, end_minutes))
     # overlap check, including wrap of an overnight tail into the first interval
     ordered = sorted(out)
@@ -90,7 +96,7 @@ def validate_hours(spec: str) -> str:
 def canonical_hours(spec: str) -> str:
     ivs = parse_intervals(spec)
     if not ivs:
-        return "closed"
+        return HOURS_CLOSED
     parts = []
     for s, e in sorted(ivs):
         parts.append(f"{_minutes_to_time(s)}-{_format_interval_end(e)}")
@@ -122,10 +128,10 @@ def hours_string_to_day(spec: str) -> dict:
 
 def day_to_hours_string(obj: Optional[dict]) -> str:
     if not obj or obj.get("isClosed"):
-        return "closed"
+        return HOURS_CLOSED
     ivs = obj.get("openIntervals") or []
     if not ivs:
-        return "closed"
+        return HOURS_CLOSED
     return ",".join(f"{i['start']}-{i['end']}" for i in ivs)
 
 
@@ -251,7 +257,7 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
         sin(radians(lat2 - lat1) / 2) ** 2
         + cos(radians(lat1)) * cos(radians(lat2)) * sin(radians(lon2 - lon1) / 2) ** 2
     )
-    return 6371000 * 2 * atan2(sqrt(a), sqrt(max(0, 1 - a)))
+    return EARTH_RADIUS_METERS * 2 * atan2(sqrt(a), sqrt(max(0, 1 - a)))
 
 
 def is_proposal_active(p: dict, now: datetime) -> bool:
@@ -281,7 +287,7 @@ def local_midnight_utc(d: date, tzname: str) -> datetime:
 
 
 def window_start_hour(window: str) -> int:
-    return {"08-10": 8, "10-12": 10, "12-16": 12, "16-20": 16}.get(window, 10)
+    return WINDOW_START_HOURS.get(window, DEFAULT_WINDOW_START_HOUR)
 
 
 def next_dispatch_date(d: date, frequency: str) -> date:
@@ -397,7 +403,7 @@ def _evidence(
         "source_record": source_record,
         "role": role,
         "summary": summary,
-        "known_at": known_at or "1970-01-01T00:00:00Z",
+        "known_at": known_at or DEFAULT_EPOCH_ISO,
     }
     if applicable_date:
         out["applicable_date"] = applicable_date
