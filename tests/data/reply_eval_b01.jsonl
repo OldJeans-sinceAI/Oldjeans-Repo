@@ -100,7 +100,7 @@
 {"id":"b01-0088","language":"ko","category":"accept","reply":"확인했습니다 감사합니다!","proposal":{"timezone":"Asia/Seoul","current_value":"09:00-17:00","change":{"kind":"DATE_HOURS","date":"2026-12-03","hours":"10:00-15:00"}}}
 {"id":"b01-0089","language":"ko","category":"accept","reply":"좋은 제안이네요.","proposal":{"timezone":"Asia/Seoul","current_value":null,"change":{"kind":"REOPEN_DATE","date":"2026-12-21"}}}
 {"id":"b01-0090","language":"ko","category":"accept","reply":"네, 좋습니다.","proposal":{"timezone":"Asia/Seoul","current_value":"10:00-16:00","change":{"kind":"DATE_HOURS","date":"2027-01-18","hours":"10:00-16:00"}}}
-{"id":"b01-0091","language/ko","category":"reject","reply":"아니오.","proposal":{"timezone":"Asia/Seoul","current_value":"10:00-18:00","change":{"kind":"DATE_HOURS","date":"2026-11-17","hours":"08:00-16:00"}}}
+{"id":"b01-0091","language":"ko","category":"reject","reply":"아니오.","proposal":{"timezone":"Asia/Seoul","current_value":"10:00-18:00","change":{"kind":"DATE_HOURS","date":"2026-11-17","hours":"08:00-16:00"}}}
 {"id":"b01-0092","language":"ko","category":"reject","reply":"기존 시간을 유지하겠습니다.","proposal":{"timezone":"Asia/Seoul","current_value":null,"change":{"kind":"REOPEN_DATE","date":"2026-12-02"}}}
 {"id":"b01-0093","language":"ko","category":"reject","reply":"변경하지 마세요.","proposal":{"timezone":"Asia/Seoul","current_value":"09:00-17:00","change":{"kind":"DATE_HOURS","date":"2026-12-09","hours":"10:00-14:00"}}}
 {"id":"b01-0094","language":"ko","category":"reject","reply":"거절합니다.","proposal":{"timezone":"Asia/Seoul","current_value":null,"change":{"kind":"REOPEN_DATE","date":"2026-12-26"}}}

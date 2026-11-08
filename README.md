@@ -88,6 +88,64 @@ the browser. The tested default model is `gemini-3.5-flash-lite`. Without a key 
 demo still runs — buttons, yes/no and exact intervals use local rules, and complex
 free text asks uses pattern matching.
 
+**Local Gemma setup (owner-reply interpretation).** Owner replies that are not an exact button, yes/no or hours interval are interpreted by a Gemma 2 2B model that runs on your own machine. It needs no API key and no network access. If the model file is missing or fails to load, the app falls back to Gemini (when `GEMINI_API_KEY` is set) and then to the local rules, so nothing breaks without it. Any model failure, such as a timeout, malformed output or a missing model, returns `UNAVAILABLE` and never produces a decision.
+
+First install the runtime inside the project's virtual environment. This compiles llama.cpp, which takes a few minutes. If the build fails, run `sudo apt install build-essential cmake` and retry.
+
+```bash
+cd ~/Programs/Oldjeans-Repo
+source .venv/bin/activate
+pip install llama-cpp-python
+python -c "import llama_cpp; print(llama_cpp.__version__)"   # should print a version
+```
+
+Next download the model into `runtime/models/`. The command below fetches the stock instruction-tuned Gemma 2 2B (Q4_K_M, about 1.6 GB), which works as a baseline. Replace it with the fine-tuned GGUF when you have one (see "Fine-tuning" below). Check the size afterwards, because a file of a few KB means the download failed.
+
+```bash
+mkdir -p runtime/models
+curl -L -o runtime/models/gemma-2-2b-reply.gguf \
+  https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-Q4_K_M.gguf
+ls -lh runtime/models/
+```
+
+The app uses the model automatically when the file exists. Settings go in `.env` and are all optional: `GEMMA_MODEL_PATH` (default `runtime/models/gemma-2-2b-reply.gguf`), `GEMMA_TIMEOUT` in seconds (default `4`; raise it, for example to `10`, on a slow CPU), and `GEMMA_ENABLED=false` to turn Gemma off. Confirm the app picked it up. The health output should show `"provider": "LOCAL_GEMMA"`, and `GEMINI` or `RULES` instead means the file was not found or failed to load.
+
+```bash
+python -c "from app.replies import OwnerReplies; print(OwnerReplies().health())"
+```
+
+To try one reply by hand, run the engine directly. Replies such as "yes", "no" or "09:00-16:00" never reach the model, because the app's rules handle them first, so test with a sentence like the one below. The expected result is `intent='EDIT'` with `hours='07:30-15:00'`.
+
+```bash
+python - <<'EOF'
+from app.teammate.local_engine import LocalGemmaEngine
+e = LocalGemmaEngine("runtime/models/gemma-2-2b-reply.gguf")
+ctx = {"change": {"kind": "DATE_HOURS", "date": "2026-12-24", "hours": "07:30-13:00"},
+       "timezone": "Europe/Helsinki", "current_value": None}
+print(e.configured, e.interpret(ctx, "Please close at 15:00 instead"))
+EOF
+```
+
+**Measuring accuracy.** The evaluation harness runs labelled replies (accept, reject, edit) through the model and reports overall accuracy, accuracy per category and language, a confusion matrix, latency and every failure. A reply counts as correct only if the app would produce the right ready-to-confirm draft, so a hedged answer or the wrong hours is a failure. To build a large dataset, give `docs/reply_dataset_prompt.md` to another LLM, concatenate its outputs into `data.jsonl` and run the commands below. The sample file checks that everything works, and `--min-accuracy` makes the command exit with an error if accuracy is below the threshold. The unit test version is `GEMMA_EVAL_DATASET=data.jsonl python -m unittest test_gemma_accuracy`, run with `PYTHONPATH=tests/product:.`. It also fails if any reject or edit reply is ever classified as an approval.
+
+```bash
+python tools/eval_gemma_replies.py tests/data/reply_eval_sample.jsonl
+python tools/eval_gemma_replies.py data.jsonl --min-accuracy 0.9 --report report.json
+```
+
+**Fine-tuning (only if accuracy is too low).** Generate synthetic training data, then train on a machine with a GPU, for example a free Google Colab T4. Training needs `unsloth`, `trl` and `datasets`, which the app itself does not need. The training script exports a Q4_K_M GGUF into `gemma-replies-q4/`. Copy that file over `runtime/models/gemma-2-2b-reply.gguf` and rerun the evaluation to compare. The generator's templates are small, so add more phrasings before training.
+
+```bash
+python tools/make_reply_dataset.py train.jsonl 1500
+python tools/train_gemma_replies.py train.jsonl
+```
+
+**Tests that need no model.** These use a fake model and check the engine, the wiring and the harness. One real-model test is skipped until a dataset and model exist.
+
+```bash
+PYTHONPATH=tests/product:. python -m unittest test_local_engine test_replies test_gemma_accuracy -v
+```
+
 **Optional real Yext sandbox (`--with-sandbox`).** Writing to the team's real Yext
 workspace is opt-in and requires mock mode plus configured credentials
 (`YEXT_API_KEY`, `YEXT_ENTITY_ID`). It adds a `/sandbox/` workspace that targets a

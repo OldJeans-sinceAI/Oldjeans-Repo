@@ -1,0 +1,2452 @@
+{
+  "total": 412,
+  "accuracy": 0.3568,
+  "unavailable_rate": 0.0024,
+  "per_category": {
+    "accept": {
+      "n": 140,
+      "accuracy": 0.0
+    },
+    "edit": {
+      "n": 136,
+      "accuracy": 0.4118
+    },
+    "reject": {
+      "n": 136,
+      "accuracy": 0.6691
+    }
+  },
+  "per_language": {
+    "en": {
+      "n": 164,
+      "accuracy": 0.4451
+    },
+    "fi": {
+      "n": 63,
+      "accuracy": 0.2063
+    },
+    "ko": {
+      "n": 62,
+      "accuracy": 0.2742
+    },
+    "nb": {
+      "n": 61,
+      "accuracy": 0.377
+    },
+    "sv": {
+      "n": 62,
+      "accuracy": 0.3387
+    }
+  },
+  "confusion": {
+    "accept": {
+      "CLARIFY": 135,
+      "APPLY": 5
+    },
+    "edit": {
+      "EDIT": 66,
+      "REJECT": 39,
+      "APPLY": 22,
+      "CLARIFY": 8,
+      "UNAVAILABLE": 1
+    },
+    "reject": {
+      "REJECT": 91,
+      "CLARIFY": 35,
+      "EDIT": 2,
+      "APPLY": 8
+    }
+  },
+  "latency_ms": {
+    "p50": 5250,
+    "p95": 8428,
+    "mean": 5567
+  },
+  "failures": [
+    {
+      "id": "s1",
+      "language": "en",
+      "category": "accept",
+      "reply": "Looks good, go ahead",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "s2",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Sopii hyvin, kiitos",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "s3",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Det låter bra, kör på",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "s4",
+      "language": "ko",
+      "category": "accept",
+      "reply": "네, 그렇게 해주세요",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "s8",
+      "language": "ko",
+      "category": "reject",
+      "reply": "아니요, 변경하지 마세요",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "s10",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Sopii, mutta suljetaan jo klo 14",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "s11",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Öppna inte alls",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b01-0001",
+      "language": "en",
+      "category": "accept",
+      "reply": "Sounds good, we will be open then.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0002",
+      "language": "en",
+      "category": "accept",
+      "reply": "Approved, thank you!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0003",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, that schedule works perfectly for us.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0004",
+      "language": "en",
+      "category": "accept",
+      "reply": "Perfect, thanks!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0005",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, 08:00-14:00 is fine",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0006",
+      "language": "en",
+      "category": "accept",
+      "reply": "Great, merry Christmas!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0007",
+      "language": "en",
+      "category": "accept",
+      "reply": "ok",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0008",
+      "language": "en",
+      "category": "accept",
+      "reply": "Confirmed, we will open then.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0009",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yeah that works",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0010",
+      "language": "en",
+      "category": "accept",
+      "reply": "Looks fine, go ahead.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0011",
+      "language": "en",
+      "category": "accept",
+      "reply": "Approved. See you then.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "unexpected hours '10:00-15:00'"
+    },
+    {
+      "id": "b01-0012",
+      "language": "en",
+      "category": "accept",
+      "reply": "Fine by us.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0013",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, that's correct.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0014",
+      "language": "en",
+      "category": "accept",
+      "reply": "All good, thanks.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0020",
+      "language": "en",
+      "category": "reject",
+      "reply": "We always have the same hours, no change.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0030",
+      "language": "en",
+      "category": "edit",
+      "reply": "We're closed that day",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b01-0031",
+      "language": "en",
+      "category": "edit",
+      "reply": "open 9-12 and 13-17",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b01-0035",
+      "language": "en",
+      "category": "edit",
+      "reply": "Make it 1500 close please",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '15:00' != '08:00-15:00'"
+    },
+    {
+      "id": "b01-0036",
+      "language": "en",
+      "category": "edit",
+      "reply": "We are closed on 2026-12-25",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b01-0038",
+      "language": "en",
+      "category": "edit",
+      "reply": "lets do 10 to 2 instead",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '10:00-20:00' != '10:00-14:00'"
+    },
+    {
+      "id": "b01-0041",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Sopii oikein hyvin!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0042",
+      "language": "fi",
+      "category": "accept",
+      "reply": "joo kiitti",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0043",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Selvä juttu, käy hyvin.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0044",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Hyvä, kiitos tiedosta.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "intent CLARIFY, expected APPLY"
+    },
+    {
+      "id": "b01-0045",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Jep, näin tehdään.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0046",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Ei käy.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b01-0048",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Pidetään vanhat ajoissa kiinni.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b01-0049",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Ei kiitos, mennään normaalisti.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b01-0050",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Emme muuta aukioloaikoja.",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "intent EDIT, expected REJECT"
+    },
+    {
+      "id": "b01-0052",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Ollaan kiinni sinä päivänä",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b01-0053",
+      "language": "fi",
+      "category": "edit",
+      "reply": "kello 9-16",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '08:00-16:00' != '09:00-16:00'"
+    },
+    {
+      "id": "b01-0055",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Avoinna 9-12 ja 13-17",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b01-0056",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Det låter bra!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0057",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Ja, det fungerar utmärkt.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0058",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Perfekt, tack så mycket.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0059",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Godkänt!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0060",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Jodå, det kör vi på.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0063",
+      "language": "sv",
+      "category": "reject",
+      "reply": "Ändra ingenting.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b01-0066",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Öppna inte alls",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b01-0068",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Vi stänger klockan 14.00",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b01-0070",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Öppet 09:00-12:00 och 13:00-16:00",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b01-0071",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Det høres bra ut!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0072",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Ja, det er i orden.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0073",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Perfekt, takk!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0074",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Godkjent.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0075",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Fint, vi sees da.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0077",
+      "language": "nb",
+      "category": "reject",
+      "reply": "Vi beholder de vanlige tidene.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected REJECT"
+    },
+    {
+      "id": "b01-0081",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Vi er stengt den dagen",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b01-0083",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Vi stenger klokka 15.00",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b01-0085",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Åpent 09:00-12:00 og 13:00-16:00",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b01-0086",
+      "language": "ko",
+      "category": "accept",
+      "reply": "좋습니다, 승인합니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0087",
+      "language": "ko",
+      "category": "accept",
+      "reply": "넵, 그렇게 하겠습니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0088",
+      "language": "ko",
+      "category": "accept",
+      "reply": "확인했습니다 감사합니다!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0089",
+      "language": "ko",
+      "category": "accept",
+      "reply": "좋은 제안이네요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b01-0090",
+      "language": "ko",
+      "category": "accept",
+      "reply": "네, 좋습니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b01-0091",
+      "language": "ko",
+      "category": "reject",
+      "reply": "아니오.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b01-0092",
+      "language": "ko",
+      "category": "reject",
+      "reply": "기존 시간을 유지하겠습니다.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected REJECT"
+    },
+    {
+      "id": "b01-0093",
+      "language": "ko",
+      "category": "reject",
+      "reply": "변경하지 마세요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b01-0094",
+      "language": "ko",
+      "category": "reject",
+      "reply": "거절합니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b01-0096",
+      "language": "ko",
+      "category": "edit",
+      "reply": "그날은 휴무입니다",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b01-0098",
+      "language": "ko",
+      "category": "edit",
+      "reply": "오후 3시에 마감합니다",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0001",
+      "language": "en",
+      "category": "accept",
+      "reply": "Sounds good to me, go for it.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0002",
+      "language": "en",
+      "category": "accept",
+      "reply": "Approved, thanks!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0003",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, 10:00-14:00 works for us.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0004",
+      "language": "en",
+      "category": "accept",
+      "reply": "Confirmed. Have a good week.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0005",
+      "language": "en",
+      "category": "accept",
+      "reply": "ok fine",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0006",
+      "language": "en",
+      "category": "accept",
+      "reply": "Works for us, cheers.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0007",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yep, that's fine by me.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0008",
+      "language": "en",
+      "category": "accept",
+      "reply": "Good with us, thank you for checking.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0009",
+      "language": "en",
+      "category": "accept",
+      "reply": "Agreed, go with the proposed times.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "unexpected hours '09:00-16:00'"
+    },
+    {
+      "id": "b02-0010",
+      "language": "en",
+      "category": "accept",
+      "reply": "Perfect, that's what we wanted.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0011",
+      "language": "en",
+      "category": "accept",
+      "reply": "Approved. Happy new year!",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "unexpected hours '10:00-15:00'"
+    },
+    {
+      "id": "b02-0012",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes please, go ahead with it.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0013",
+      "language": "en",
+      "category": "accept",
+      "reply": "Looks right to me, yes.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0014",
+      "language": "en",
+      "category": "accept",
+      "reply": "Sure, that's totally fine.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0015",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Joo, sopii.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0016",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Hyvä, tehdään niin.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0017",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Kyllä käy, kiitos!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0018",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Ok 👍",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0019",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Sopii meille, kiitos paljon.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0020",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Ja, det funkar för oss.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0021",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Okej, kör på det.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0022",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Tack, det är bra!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0023",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Godkänt, tack.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0024",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Ja tack, det passar bra.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0025",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Ja, det går fint.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0026",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Greit, kjør på.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0027",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Supert, takk!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0028",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Ja, det er bra for oss.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0029",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Ok, godkjent.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "unexpected hours '08:00-14:00'"
+    },
+    {
+      "id": "b02-0030",
+      "language": "ko",
+      "category": "accept",
+      "reply": "네, 좋습니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0031",
+      "language": "ko",
+      "category": "accept",
+      "reply": "알겠습니다, 그대로 진행해 주세요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0032",
+      "language": "ko",
+      "category": "accept",
+      "reply": "좋아요, 감사합니다!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0033",
+      "language": "ko",
+      "category": "accept",
+      "reply": "확인했습니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0034",
+      "language": "ko",
+      "category": "accept",
+      "reply": "네, 문제없습니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0037",
+      "language": "en",
+      "category": "reject",
+      "reply": "We'll stay open as normal, no change.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected REJECT"
+    },
+    {
+      "id": "b02-0047",
+      "language": "en",
+      "category": "reject",
+      "reply": "No change needed from our side.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0050",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Ei muutoksia, kiitos.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0051",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Emme halua muuttaa aukioloa.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0052",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Ei kiitos 🙏",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0055",
+      "language": "sv",
+      "category": "reject",
+      "reply": "Det vill vi inte, tack.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0060",
+      "language": "nb",
+      "category": "reject",
+      "reply": "Ikke aktuelt, takk.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0062",
+      "language": "nb",
+      "category": "reject",
+      "reply": "Vi takker nei.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0063",
+      "language": "ko",
+      "category": "reject",
+      "reply": "아니요, 변경하지 않겠습니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0065",
+      "language": "ko",
+      "category": "reject",
+      "reply": "변경 원하지 않습니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0067",
+      "language": "ko",
+      "category": "reject",
+      "reply": "아니요, 그대로 두세요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0069",
+      "language": "en",
+      "category": "edit",
+      "reply": "Make it 10 to 16",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0070",
+      "language": "en",
+      "category": "edit",
+      "reply": "We're closed that day",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0071",
+      "language": "en",
+      "category": "edit",
+      "reply": "Open 9-13 and 14-18",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b02-0073",
+      "language": "en",
+      "category": "edit",
+      "reply": "Shut at 1 pm, open from 9",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0075",
+      "language": "en",
+      "category": "edit",
+      "reply": "Open an hour later",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "intent CLARIFY, expected EDIT"
+    },
+    {
+      "id": "b02-0076",
+      "language": "en",
+      "category": "edit",
+      "reply": "15.30 closing",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0077",
+      "language": "en",
+      "category": "edit",
+      "reply": "Shut the whole day",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0078",
+      "language": "en",
+      "category": "edit",
+      "reply": "Please open at 07:30 and close at 14:30",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b02-0080",
+      "language": "en",
+      "category": "edit",
+      "reply": "Open 10-11:30 only",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0081",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Sopii, mutta aukeaa vasta klo 10",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b02-0082",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Ollaan kiinni koko päivän",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0083",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Avoinna 9-11 ja 12-14",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b02-0084",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Kellot 10.00-15.30 riittää",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b02-0085",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Sopii mutta sulkeudutaan 16",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0087",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Vi har stängt den dagen",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0088",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Öppna 09.00-12.00 och 14.00-18.00",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b02-0089",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Från 8 till 13 gäller",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b02-0090",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Vi stänger kl 17 men öppnar 11",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0091",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Vi holder stengt",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0094",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Kun 12-16",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b02-0095",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Åpent 10-12 og 13-15",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b02-0096",
+      "language": "ko",
+      "category": "edit",
+      "reply": "휴무입니다",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b02-0098",
+      "language": "ko",
+      "category": "edit",
+      "reply": "9시부터 12시, 13시부터 15시까지",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b02-0099",
+      "language": "ko",
+      "category": "edit",
+      "reply": "오후 4시 마감으로 변경해 주세요",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '16:00-24:00' != '08:00-16:00'"
+    },
+    {
+      "id": "b02-0100",
+      "language": "ko",
+      "category": "edit",
+      "reply": "11시에 열고 16시에 닫아요",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "intent CLARIFY, expected EDIT"
+    },
+    {
+      "id": "b03-0001",
+      "language": "en",
+      "category": "accept",
+      "reply": "Sounds fine, go ahead with those hours.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0002",
+      "language": "en",
+      "category": "accept",
+      "reply": "All right by us, thanks.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0003",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, 09:30-12:30 is what we need.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0004",
+      "language": "en",
+      "category": "accept",
+      "reply": "Agreed, have a nice weekend.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0005",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, fine with me.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0006",
+      "language": "en",
+      "category": "accept",
+      "reply": "Thanks, we accept this.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0007",
+      "language": "en",
+      "category": "accept",
+      "reply": "Ok go on.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0008",
+      "language": "en",
+      "category": "accept",
+      "reply": "Perfect, confirmed on our side.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0009",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes that's the schedule we agreed, thanks!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0010",
+      "language": "en",
+      "category": "accept",
+      "reply": "Approved, good luck with the day.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0011",
+      "language": "en",
+      "category": "accept",
+      "reply": "Works, go ahead.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0012",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, we agree to the change.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0013",
+      "language": "en",
+      "category": "accept",
+      "reply": "Looks good, cheers.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0014",
+      "language": "en",
+      "category": "accept",
+      "reply": "Sure, that's perfect for us.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0015",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Joo, hyvä näin.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0016",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Kiitos, sopii meille hyvin.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0017",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Hyväksytään, kiitos!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0018",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Ok, mennään näillä ajoilla.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0019",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Selvä, kiitos.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0020",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Ja, det går bra.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0021",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Tack, vi godkänner det.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0022",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Okej, det funkar fint.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0023",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Ja, kör på 08:00-13:00.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0024",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Bra, tack för förslaget.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0025",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Ja, det passer fint.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0026",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Greit, vi godkjenner.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0027",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Takk, det er bra.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0028",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Ja, 08:30-14:30 er fint.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0029",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Supert, takk for info.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0030",
+      "language": "ko",
+      "category": "accept",
+      "reply": "네, 동의합니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0031",
+      "language": "ko",
+      "category": "accept",
+      "reply": "좋습니다, 그렇게 하세요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0032",
+      "language": "ko",
+      "category": "accept",
+      "reply": "감사합니다, 승인합니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0033",
+      "language": "ko",
+      "category": "accept",
+      "reply": "네, 10:00-15:00로 진행해 주세요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0034",
+      "language": "ko",
+      "category": "accept",
+      "reply": "확인했어요, 감사해요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b03-0035",
+      "language": "en",
+      "category": "reject",
+      "reply": "No, not changing anything.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b03-0037",
+      "language": "en",
+      "category": "reject",
+      "reply": "Please don't change the hours.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected REJECT"
+    },
+    {
+      "id": "b03-0050",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Emme halua muutosta.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b03-0055",
+      "language": "sv",
+      "category": "reject",
+      "reply": "Vi vill inte ha någon ändring.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b03-0057",
+      "language": "sv",
+      "category": "reject",
+      "reply": "Vi tackar nej till detta.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b03-0060",
+      "language": "nb",
+      "category": "reject",
+      "reply": "Vi ønsker ikke endring.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b03-0063",
+      "language": "ko",
+      "category": "reject",
+      "reply": "아니요, 현재 시간 그대로 두세요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b03-0065",
+      "language": "ko",
+      "category": "reject",
+      "reply": "반대합니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b03-0067",
+      "language": "ko",
+      "category": "reject",
+      "reply": "바꾸지 말아 주세요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b03-0071",
+      "language": "en",
+      "category": "edit",
+      "reply": "Closed all day, sorry",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b03-0076",
+      "language": "en",
+      "category": "edit",
+      "reply": "Our business is closed that whole day",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b03-0077",
+      "language": "en",
+      "category": "edit",
+      "reply": "Open 1000-1600 instead",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '1000-1600' != '10:00-16:00'"
+    },
+    {
+      "id": "b03-0079",
+      "language": "en",
+      "category": "edit",
+      "reply": "Opening at 7:45, closing 12:15",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b03-0080",
+      "language": "en",
+      "category": "edit",
+      "reply": "Close earlier, at 13:15",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b03-0081",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Sopii, mutta avataan vasta klo 11",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b03-0082",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Ollaan auki 12-16",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '12-16' != '12:00-16:00'"
+    },
+    {
+      "id": "b03-0083",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Aukioloaika 8.30-13.30",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b03-0084",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Suljetaan koko päiväksi",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b03-0085",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Avoinna 9-12 ja 14-16",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b03-0087",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Stängt den här dagen",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b03-0088",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Öppet 9-12 och 13-15",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b03-0090",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Stäng redan 14.00",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b03-0091",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Vi stenger hele dagen",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b03-0093",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Stenger kl 13 og åpner kl 10",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '10:00-13:00,15:00-17:00' != '10:00-13:00'"
+    },
+    {
+      "id": "b03-0094",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Åpent 09:00-11:00 og 12:00-14:00",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b03-0097",
+      "language": "ko",
+      "category": "edit",
+      "reply": "휴무로 해주세요",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b03-0100",
+      "language": "ko",
+      "category": "edit",
+      "reply": "오후 2시 30분까지만 운영합니다",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '14:00-20:00' != '10:00-14:30'"
+    },
+    {
+      "id": "b04-0001",
+      "language": "en",
+      "category": "accept",
+      "reply": "Sounds great to us, thank you.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0002",
+      "language": "en",
+      "category": "accept",
+      "reply": "Confirmed, go ahead.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0003",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, that schedule is fine.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0004",
+      "language": "en",
+      "category": "accept",
+      "reply": "Awesome, thanks!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0005",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, 09:00-15:00 works well.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0006",
+      "language": "en",
+      "category": "accept",
+      "reply": "Gladly accepted, happy holidays!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0007",
+      "language": "en",
+      "category": "accept",
+      "reply": "yep fine with me",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0008",
+      "language": "en",
+      "category": "accept",
+      "reply": "That's approved.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0009",
+      "language": "en",
+      "category": "accept",
+      "reply": "We agree with these hours.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0010",
+      "language": "en",
+      "category": "accept",
+      "reply": "All good here, proceed.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0011",
+      "language": "en",
+      "category": "accept",
+      "reply": "Approved. Thanks for updating.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "unexpected hours '09:00-16:00'"
+    },
+    {
+      "id": "b04-0012",
+      "language": "en",
+      "category": "accept",
+      "reply": "That works for our team.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0013",
+      "language": "en",
+      "category": "accept",
+      "reply": "Yes, 10:00-15:00 is correct.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0014",
+      "language": "en",
+      "category": "accept",
+      "reply": "Looks good to me.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0021",
+      "language": "en",
+      "category": "reject",
+      "reply": "No thanks, don't update.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0022",
+      "language": "en",
+      "category": "reject",
+      "reply": "Not approving this.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b04-0026",
+      "language": "en",
+      "category": "reject",
+      "reply": "Decline.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b04-0029",
+      "language": "en",
+      "category": "edit",
+      "reply": "We are closed all day",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b04-0031",
+      "language": "en",
+      "category": "edit",
+      "reply": "Open 9 to 12 and 13 to 17",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b04-0032",
+      "language": "en",
+      "category": "edit",
+      "reply": "from 9 am to 5 pm",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b04-0033",
+      "language": "en",
+      "category": "edit",
+      "reply": "Closing at 16.00",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b04-0035",
+      "language": "en",
+      "category": "edit",
+      "reply": "Make it 1400 close please",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '14:00-17:00' != '09:00-14:00'"
+    },
+    {
+      "id": "b04-0036",
+      "language": "en",
+      "category": "edit",
+      "reply": "We are closed on 2027-01-16",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b04-0038",
+      "language": "en",
+      "category": "edit",
+      "reply": "lets do 9 to 1 instead",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "hours '09:00-01:00' != '09:00-13:00'"
+    },
+    {
+      "id": "b04-0041",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Tämä sopii mainiosti.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0042",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Kyllä, sopii.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0043",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Aukioloaika sopii meille.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0044",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Hyväksytty, kiitos.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0045",
+      "language": "fi",
+      "category": "accept",
+      "reply": "Täydellistä, kiitos paljon!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0047",
+      "language": "fi",
+      "category": "reject",
+      "reply": "En hyväksy muutosta.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b04-0048",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Pysytään normaalissa aikataulussa.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected REJECT"
+    },
+    {
+      "id": "b04-0050",
+      "language": "fi",
+      "category": "reject",
+      "reply": "Hylätty.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected REJECT"
+    },
+    {
+      "id": "b04-0052",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Suljettu koko päivän",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b04-0053",
+      "language": "fi",
+      "category": "edit",
+      "reply": "kello 10-15",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0054",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Avoinna 08.00-14.00",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b04-0055",
+      "language": "fi",
+      "category": "edit",
+      "reply": "Avoinna 10-13 ja 14-17",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b04-0056",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Det blir utmärkt!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0057",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Ja, det godkänner vi.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0058",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Strålande, tack!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0059",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Okej för oss.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0060",
+      "language": "sv",
+      "category": "accept",
+      "reply": "Ja, 09:00-15:00 passar bra.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0062",
+      "language": "sv",
+      "category": "reject",
+      "reply": "Vi önskar inga ändringar.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b04-0064",
+      "language": "sv",
+      "category": "reject",
+      "reply": "Neka denna ändring.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected REJECT"
+    },
+    {
+      "id": "b04-0066",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Stängt hela dagen",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b04-0068",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Vi stänger klockan 13.00",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b04-0070",
+      "language": "sv",
+      "category": "edit",
+      "reply": "Öppet 10:00-13:00 och 14:00-17:00",
+      "predicted": "UNAVAILABLE",
+      "success": false,
+      "reason": "engine unavailable: TIMEOUT"
+    },
+    {
+      "id": "b04-0071",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Det passer utmerket.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0072",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Ja, vi bekrefter dette.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0073",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Flott, takk skal du ha!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0074",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Den er grei.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b04-0075",
+      "language": "nb",
+      "category": "accept",
+      "reply": "Ja, 10:00-14:00 er fint for oss.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0077",
+      "language": "nb",
+      "category": "reject",
+      "reply": "Vil ikke endre noe.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b04-0079",
+      "language": "nb",
+      "category": "reject",
+      "reply": "Avvises.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b04-0081",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Helt stengt den dagen",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b04-0083",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Vi stenger klokka 14.00",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b04-0085",
+      "language": "nb",
+      "category": "edit",
+      "reply": "Åpent 08:00-11:00 og 12:00-15:00",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected EDIT"
+    },
+    {
+      "id": "b04-0086",
+      "language": "ko",
+      "category": "accept",
+      "reply": "네, 제안대로 변경해 주세요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0087",
+      "language": "ko",
+      "category": "accept",
+      "reply": "좋습니다. 수고하세요!",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0088",
+      "language": "ko",
+      "category": "accept",
+      "reply": "네, 동의합니다 감사합니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0089",
+      "language": "ko",
+      "category": "accept",
+      "reply": "네 10:00-16:00 괜찮습니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0090",
+      "language": "ko",
+      "category": "accept",
+      "reply": "승인하겠습니다.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "scope_match=false"
+    },
+    {
+      "id": "b04-0092",
+      "language": "ko",
+      "category": "reject",
+      "reply": "거절합니다. 변경하지 마세요.",
+      "predicted": "CLARIFY",
+      "success": false,
+      "reason": "needs_clarification=true"
+    },
+    {
+      "id": "b04-0094",
+      "language": "ko",
+      "category": "reject",
+      "reply": "수정하지 말고 그대로 두세요.",
+      "predicted": "APPLY",
+      "success": false,
+      "reason": "intent APPLY, expected REJECT"
+    },
+    {
+      "id": "b04-0095",
+      "language": "ko",
+      "category": "reject",
+      "reply": "기존 운영시간을 유지하고 싶습니다.",
+      "predicted": "EDIT",
+      "success": false,
+      "reason": "intent EDIT, expected REJECT"
+    },
+    {
+      "id": "b04-0096",
+      "language": "ko",
+      "category": "edit",
+      "reply": "전일 휴무입니다",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    },
+    {
+      "id": "b04-0098",
+      "language": "ko",
+      "category": "edit",
+      "reply": "오후 1시에 닫습니다",
+      "predicted": "REJECT",
+      "success": false,
+      "reason": "intent REJECT, expected EDIT"
+    }
+  ]
+}
