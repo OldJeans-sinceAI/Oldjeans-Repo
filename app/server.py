@@ -221,8 +221,9 @@ class Handler(BaseHTTPRequestHandler):
                     raise AppError(
                         403, "CSRF_REQUIRED", "A valid request token is required."
                     )
+            MAX_REQUEST_SIZE = 65536
             size = int(self.headers.get("Content-Length", "0"))
-            if size > 65536:
+            if size > MAX_REQUEST_SIZE:
                 raise AppError(413, "REQUEST_TOO_LARGE", "Request is too large.")
             if size:
                 if not self.headers.get("Content-Type", "").startswith(
@@ -351,10 +352,10 @@ class Handler(BaseHTTPRequestHandler):
                 r"/api/v1/operator/fleet-runs/([^/]+)(/contacts)?", path
             )
             if fleet_match:
-                jid, contact = fleet_match.groups()
-                if method == "GET" and not contact:
+                jid, contacts_subpath = fleet_match.groups()
+                if method == "GET" and not contacts_subpath:
                     return self.reply(200, self.server.fleet.get(jid))
-                if method == "POST" and contact:
+                if method == "POST" and contacts_subpath:
                     self.validate("FleetContactRequest", b)
                     return self.reply(202, self.server.fleet.prepare_contacts(jid, b))
             if path.endswith("/businesses") and method == "GET":
