@@ -1,16 +1,16 @@
 "use strict";
 
-// Fixed presentation script. It orchestrates the same owner APIs and channel views
-// as the interactive product. No simulated result can advance the application step.
+// Guided presentation with real, freely chosen owner decisions at step 4.
+// Application outcomes always come from the existing authenticated owner APIs.
 const PRESENTATION_DATE = "2026-12-24";
 const PRESENTATION_KEY = "connect-presentation-v1";
 const PRESENTATION_CHAPTERS = [
-  {entity: "FI-D0003", channel: "WHATSAPP", decision: "APPROVE", title: "One tap to approve", reply: "YES"},
-  {entity: "FI-D0002", channel: "EMAIL", decision: "EDIT", title: "A reply to make it yours", reply: "11:00-16:00"},
-  {entity: "FI-D0001", channel: "SMS", decision: "REJECT", title: "The freedom to say no", reply: "NO"},
+  {entity: "FI-D0003", channel: "WHATSAPP"},
+  {entity: "FI-D0002", channel: "EMAIL"},
+  {entity: "FI-D0001", channel: "SMS"},
 ];
 let presentation = {phase: "start", chapter: 0, runId: null, run: null, proposal: null,
-  message: null, result: null, cases: [], busy: false, error: "", ready: false};
+  message: null, result: null, cases: [], outcomes: [], busy: false, error: "", ready: false};
 let presentationPoll;
 function presentationActive() {
   return !APP_BASE && !IS_OWNER && state.tab === "presentation" && state.health?.presentation_mode === true;
@@ -20,21 +20,35 @@ function savePresentation() {
   sessionStorage.setItem(PRESENTATION_KEY, JSON.stringify({phase, chapter, runId}));
 }
 function presentationStep() {
-  return {start: 1, scan: 1, suggest: 2, contact: 3, owner: 4, preview: 4, result: 5, complete: 5}[presentation.phase] || 1;
+  return {start: 1, scan: 1, suggest: 2, contact: 3, decide: 4, result: 5, complete: 5}[presentation.phase] || 1;
 }
-function presentationExpected(p, r, chapter = presentation.chapter) {
+function presentationVerified(p, r, chapter = presentation.chapter) {
   const c = PRESENTATION_CHAPTERS[chapter];
-  if (!p || !r || p.entity_id !== c.entity || p.change.date !== PRESENTATION_DATE || p.mode !== "mock") return false;
-  if (c.decision === "REJECT") return p.decision_status === "REJECTED" && r.application_status === "NOT_STARTED";
-  const status = c.decision === "EDIT" ? "EDITED" : "APPROVED";
-  const hours = c.decision === "EDIT" ? c.reply : p.change.hours;
-  return p.decision_status === status && r.application_status === "SUCCEEDED" && !!r.verified_at && r.final_change?.hours === hours;
+  if (!p || !r || p.entity_id !== c.entity || p.change.date !== PRESENTATION_DATE || p.mode !== "mock" ||
+      r.mode !== "mock" || r.proposal_id !== p.proposal_id || r.proposal_version !== p.version ||
+      r.source_entity_id !== p.entity_id || r.decision_status !== p.decision_status) return false;
+  if (p.decision_status === "REJECTED") return r.application_status === "NOT_STARTED";
+  if (!["APPROVED", "EDITED"].includes(p.decision_status)) return false;
+  return r.application_status === "SUCCEEDED" && !!r.verified_at &&
+    r.final_change?.kind === "DATE_HOURS" && r.final_change.date === p.change.date &&
+    typeof r.final_change.hours === "string" && r.final_change.hours.length > 0 &&
+    (p.decision_status === "EDITED" || r.final_change.hours === p.change.hours);
+}
+function presentationRememberResult() {
+  const d = presentation;
+  if (presentationVerified(d.proposal, d.result)) d.outcomes[d.chapter] = {
+    status: d.proposal.decision_status,
+    business: d.proposal.business_name,
+    hours: changeText(d.proposal.decision_status === "REJECTED" ? d.proposal.baseline : d.result.final_change),
+  };
+  else delete d.outcomes[d.chapter];
 }
 function presentationCanAdvance() {
   const d = presentation;
   if (!d.ready || d.busy || (d.error && d.phase !== "start")) return false;
+  if (d.phase === "decide") return false;
   if (d.phase === "scan") return d.run?.status === "COMPLETED" && d.run.failed_businesses === 0;
-  if (d.phase === "result") return presentationExpected(d.proposal, d.result);
+  if (d.phase === "result") return presentationVerified(d.proposal, d.result);
   return true;
 }
 function presentationNextText() {
@@ -44,8 +58,7 @@ function presentationNextText() {
     scan: "Show a proposal selected from the completed directory scan.",
     suggest: `Prepare the ${chapter.channel === "WHATSAPP" ? "WhatsApp" : chapter.channel} message.`,
     contact: "Open the message as the simulated business owner.",
-    owner: chapter.decision === "APPROVE" ? "Act as the owner and press Approve hours. This saves to the local mock." : `Send the scripted owner reply: ${chapter.reply}. No change is saved yet.`,
-    preview: "Send CONFIRM as the simulated owner. This records the decision.",
+    decide: "Use the customer screen above. Your confirmed decision opens step 5 automatically.",
     result: d.chapter < 2 ? "Continue with the next channel and owner decision." : "Show what this complete workflow achieved.",
     complete: "Start a fresh rehearsal. Only presentation data will be reset.",
   }[d.phase];
@@ -75,30 +88,48 @@ function presentationContactView() {
 function presentationOwnerView() {
   const d = presentation, c = PRESENTATION_CHAPTERS[d.chapter], p = d.proposal;
   const view = c.channel === "WHATSAPP" ? renderWhatsAppProposal(p) : c.channel === "EMAIL" ? renderEmailProposal(p) : renderSmsProposal(p);
-  return `<div class="pt-section-title pt-owner-title"><p class="eyebrow">04 / DECIDE · SIMULATED OWNER</p><h1>${d.phase === "preview" ? "The preview puts the owner in control." : c.title + "."}</h1><p>${d.phase === "preview" ? "The reply has been interpreted, but nothing has been applied. Next sends the owner's explicit confirmation." : c.channel === "WHATSAPP" ? "The presenter uses Next to simulate the owner's Approve hours button." : `The presenter uses Next to send the fixed reply “${c.reply}”. Email and SMS use replies, not decision buttons.`}</p></div><div id="${c.channel.toLowerCase()}-demo" class="pt-owner-view pt-channel-${c.channel.toLowerCase()}" inert>${view}</div>`;
+  return `<div class="pt-section-title pt-owner-title"><p class="eyebrow">04 / DECIDE · INTERACTIVE CUSTOMER DEMO</p><h1>Your hours. Your decision.</h1><p>${c.channel === "WHATSAPP" ? "Use Approve hours, Edit hours or Keep current hours in the message. Edited hours need a separate confirmation." : "Reply YES to approve, NO to keep the current hours, or the hours you want. Review the preview, then reply CONFIRM. Use CANCEL to discard it."}</p><p class="pt-owner-help">Choose one outcome for this business. Step 5 opens after your decision is processed. You can try a different choice on another business or a later rehearsal.</p></div><div id="${c.channel.toLowerCase()}-demo" class="pt-owner-view pt-channel-${c.channel.toLowerCase()}" ${d.busy ? 'inert aria-busy="true"' : ""}>${view}</div>`;
 }
 function presentationResultView() {
   const d = presentation, p = d.proposal, r = d.result, rejected = p.decision_status === "REJECTED";
-  const good = presentationExpected(p,r);
+  const good = presentationVerified(p,r);
   const finalHours = rejected ? changeText(p.baseline) : r?.final_change ? changeText(r.final_change) : "Not verified";
-  return `<div class="pt-section-title"><p class="eyebrow">05 / APPLY & CONFIRM</p><h1>${!good ? "This result needs attention." : rejected ? "No means no. The current hours stay." : "Saved. Read back. Verified."}</h1><p>${h(p.business_name)} · ${h(PRESENTATION_CHAPTERS[d.chapter].decision)}</p></div><section class="pt-panel pt-result"><div class="pt-result-symbol">${!good ? "!" : rejected ? "–" : "✓"}</div><div class="pt-before-after"><div><span>Before</span><strong>${h(changeText(p.baseline))}</strong></div><span class="pt-arrow">→</span><div><span>${rejected ? "Kept unchanged" : "Saved hours"}</span><strong>${h(finalHours)}</strong></div></div><p>${!good ? "The application has not been verified. Do not present this as a successful update." : rejected ? "The owner declined. No update was requested." : "The backend saved the confirmed hours through the local Yext mock API and read them back to verify the change."}</p>${r?.verified_at ? '<span class="pt-verified">✓ Independent read-back passed</span>' : ""}<div class="pt-publishers">${(r?.publishers || []).slice(0,4).map(pub => `<div><strong>${h(pub.publisher_name)}</strong><span>${pub.typical_update_seconds != null ? h(Math.round(pub.typical_update_seconds/60)) + " min typical update" : "Timing unavailable"}</span></div>`).join("")}</div>${!rejected && good ? '<small>Publisher timings are estimates from the mock dataset, not proof of live publication.</small>' : ""}</section>`;
+  return `<div class="pt-section-title"><p class="eyebrow">05 / APPLY & CONFIRM</p><h1>${!good ? "This result needs attention." : rejected ? "No means no. The current hours stay." : "Saved. Read back. Verified."}</h1><p>${h(p.business_name)} · ${h(p.decision_status)}</p></div><section class="pt-panel pt-result"><div class="pt-result-symbol">${!good ? "!" : rejected ? "–" : "✓"}</div><div class="pt-before-after"><div><span>Before</span><strong>${h(changeText(p.baseline))}</strong></div><span class="pt-arrow">→</span><div><span>${!good ? "Requested hours · not verified" : rejected ? "Kept unchanged" : "Saved hours"}</span><strong>${h(finalHours)}</strong></div></div><p>${!good ? "The application has not been verified. Check its status before continuing." : rejected ? "The owner declined. No update was requested." : "The backend saved the confirmed hours through the local Yext mock API and read them back to verify the change."}</p>${good && r?.verified_at ? '<span class="pt-verified">✓ Independent read-back passed</span>' : ""}<div class="pt-publishers">${(r?.publishers || []).slice(0,4).map(pub => `<div><strong>${h(pub.publisher_name)}</strong><span>${pub.typical_update_seconds != null ? h(Math.round(pub.typical_update_seconds/60)) + " min typical update" : "Timing unavailable"}</span></div>`).join("")}</div>${!rejected && good ? '<small>Publisher timings are estimates from the mock dataset, not proof of live publication.</small>' : ""}</section>`;
 }
 function renderPresentation() {
   const d = presentation, c = PRESENTATION_CHAPTERS[d.chapter];
+  if (d.phase === "decide") {
+    const current = state.proposals.find(p => p.proposal_id === d.proposal?.proposal_id);
+    if (current) d.proposal = current;
+    if (current && current.decision_status !== "PENDING" && !d.busy && !d.error) {
+      // Owner handlers have refreshed their proposal. Fetch the actual result once;
+      // this observer never submits a decision or interprets a reply.
+      void resolvePresentation();
+      return;
+    }
+  }
+  if (d.phase === "result") presentationRememberResult();
   const outcome = journeyOutcome(d.proposal,d.result);
   let body = "";
   if (["start","scan"].includes(d.phase)) body = presentationScanView();
   else if (d.phase !== "complete" && (!d.proposal || d.proposal.entity_id !== c.entity)) body = '<section class="pt-panel"><h1>The rehearsal needs a fresh start.</h1><p>No application result has been assumed.</p></section>';
   else if (d.phase === "suggest") body = presentationProposalView();
   else if (d.phase === "contact") body = presentationContactView();
-  else if (["owner","preview"].includes(d.phase)) body = presentationOwnerView();
+  else if (d.phase === "decide") body = presentationOwnerView();
   else if (d.phase === "result") body = presentationResultView();
-  else body = `<div class="pt-finish"><span class="pt-result-symbol">✓</span><p class="eyebrow">THE COMPLETE LOOP</p><h1>Better hours.<br>Still the owner's decision.</h1><p>One directory scan. Three ways to reach an owner.<br>Approve, edit or decline — with a verified outcome.</p><div class="pt-finish-cards">${PRESENTATION_CHAPTERS.map((x,i) => `<div class="pt-panel"><span>0${i+1} / ${x.channel}</span><h2>${x.decision === "APPROVE" ? "Approved & saved" : x.decision === "EDIT" ? "Edited & saved" : "Declined & kept"}</h2></div>`).join("")}</div><small>This rehearsal uses real application APIs with isolated mock data. Real Yext sandbox testing remains a separate, manual workspace.</small></div>`;
-  app.innerHTML = `<main class="pt-shell"><header class="pt-header">${brand()}<div class="pt-header-right"><span class="pt-demo-badge">SCRIPTED DEMO · MOCK DATA</span><a href="/?view=workspace">Explore workspace ↗</a></div></header><div class="pt-context"><span>CHRISTMAS EVE · 24 DEC 2026</span><span>${["start","scan"].includes(d.phase) ? "ALL BUSINESSES" : d.phase === "complete" ? "REHEARSAL COMPLETE" : `CHAPTER ${d.chapter+1} / 3 · ${c.channel} · ${c.decision}`}</span></div>${journeySteps(presentationStep(), d.phase === "complete" ? "APPLIED" : outcome)}<div class="pt-content" data-presentation-phase="${h(d.phase)}" data-presentation-chapter="${d.chapter}">${body}</div>${d.error ? `<div class="pt-error" role="alert">${h(d.error)} <button data-presentation-restart>Start a fresh rehearsal</button></div>` : ""}<footer class="pt-controls"><div><span class="pt-small-label">${d.busy ? "WORKING" : "NEXT IN THIS DEMO"}</span><p>${d.busy ? "Waiting for the application. No step is skipped." : h(presentationNextText())}</p></div><button class="primary pt-next" data-presentation-next ${presentationCanAdvance() ? "" : "disabled"}>${d.busy ? '<span class="spinner"></span> Please wait' : d.phase === "complete" ? "Restart demo ↻" : "Next →"}</button></footer></main>`;
-  if (["owner","preview"].includes(d.phase)) {
-    for (const el of document.querySelectorAll(".cm-email-reading,.cm-sms-thread,.wa-chat")) {
-      if (d.phase === "preview") el.scrollTop = el.scrollHeight;
-    }
+  else body = `<div class="pt-finish"><span class="pt-result-symbol">✓</span><p class="eyebrow">THE COMPLETE LOOP</p><h1>Better hours.<br>Still the owner's decision.</h1><p>One directory scan. Three ways to reach an owner.<br>These are the decisions you made in this rehearsal.</p><div class="pt-finish-cards">${PRESENTATION_CHAPTERS.map((x,i) => { const result = d.outcomes[i]; return `<div class="pt-panel"><span>0${i+1} / ${x.channel}</span><h2>${result?.status === "APPROVED" ? "Approved & saved" : result?.status === "EDITED" ? "Edited & saved" : result?.status === "REJECTED" ? "Declined & kept" : "Not verified"}</h2><p>${h(result?.business || "")}</p><strong>${h(result?.hours || "")}</strong></div>`; }).join("")}</div><small>This rehearsal uses real application APIs with isolated mock data. Real Yext sandbox testing remains a separate, manual workspace.</small></div>`;
+  const controls = d.phase === "decide"
+    ? '<span class="pt-owner-status" role="status">Your choice in the message ↑</span>'
+    : `<button class="primary pt-next" data-presentation-next ${presentationCanAdvance() ? "" : "disabled"}>${d.busy ? '<span class="spinner"></span> Please wait' : d.phase === "complete" ? "Restart demo ↻" : "Next →"}</button>`;
+  const completeOutcome = d.outcomes.some(r => r && r.status !== "REJECTED") ? "APPLIED" : "REJECTED";
+  app.innerHTML = `<main class="pt-shell"><header class="pt-header">${brand()}<div class="pt-header-right"><span class="pt-demo-badge">INTERACTIVE DEMO · MOCK DATA</span><a href="/?view=workspace">Explore workspace ↗</a></div></header><div class="pt-context"><span>CHRISTMAS EVE · 24 DEC 2026</span><span>${["start","scan"].includes(d.phase) ? "ALL BUSINESSES" : d.phase === "complete" ? "REHEARSAL COMPLETE" : `CHAPTER ${d.chapter+1} / 3 · ${c.channel}`}</span></div>${journeySteps(presentationStep(), d.phase === "complete" ? completeOutcome : outcome)}<div class="pt-content" data-presentation-phase="${h(d.phase)}" data-presentation-chapter="${d.chapter}">${body}</div>${d.error ? `<div class="pt-error" role="alert">${h(d.error)} <button data-presentation-restart ${d.busy ? "disabled" : ""}>Start a fresh rehearsal</button></div>` : ""}<footer class="pt-controls"><div><span class="pt-small-label">${d.busy ? "WORKING" : d.phase === "decide" ? "YOUR TURN · BUSINESS OWNER" : "NEXT IN THIS DEMO"}</span><p>${d.busy ? "Waiting for the application. No step is skipped." : h(presentationNextText())}</p></div>${(d.phase === "result" && !presentationVerified(d.proposal,d.result)) || (d.phase === "decide" && d.error) ? `<button data-presentation-refresh ${d.busy ? "disabled" : ""}>Check application status</button>` : ""}${controls}</footer></main>`;
+  if (d.phase === "decide") {
+    const pane = document.querySelector(".cm-email-reading");
+    if (pane?.querySelector(".outgoing, .cm-email-composer")) pane.scrollTop = pane.scrollHeight;
+    const thread = document.querySelector(".cm-sms-thread");
+    if (thread?.querySelector(".outgoing")) thread.scrollTop = thread.scrollHeight;
+    const chat = document.querySelector(".wa-chat");
+    if (chat?.querySelector(".wa-editor, .wa-draft, [role=status]")) chat.scrollTop = chat.scrollHeight;
   }
 }
 async function presentationPollScan() {
@@ -124,7 +155,7 @@ async function presentationLoadChapter() {
   const found = d.cases.find(x => x.entity_id === c.entity && x.target_date === PRESENTATION_DATE && x.action === "SUGGEST" && x.proposal_id);
   if (!found) throw new Error("The fixed demo case is not available. Start a fresh rehearsal using the supplied dataset.");
   d.proposal = await api(`/api/v1/proposals/${encodeURIComponent(found.proposal_id)}`);
-  if (d.proposal.entity_id !== c.entity || d.proposal.change.date !== PRESENTATION_DATE) throw new Error("This proposal does not match the scripted demo.");
+  if (d.proposal.entity_id !== c.entity || d.proposal.change.date !== PRESENTATION_DATE) throw new Error("This proposal does not match the guided demo.");
   state.proposals = [d.proposal];
   d.result = await api(`/api/v1/proposals/${encodeURIComponent(found.proposal_id)}/result`);
   d.proposal._result = d.result;
@@ -147,37 +178,46 @@ async function presentationOwner() {
   d.proposal = state.proposals.find(p => p.proposal_id === d.proposal.proposal_id);
   if (!d.proposal) throw new Error("The owner session does not match this proposal.");
 }
-async function presentationSendReply(text) {
-  const d = presentation, c = PRESENTATION_CHAPTERS[d.chapter], id = d.proposal.proposal_id;
-  if (c.channel === "EMAIL") emailComposers.set(id,text);
-  else smsComposers.set(id,text);
-  renderPresentation();
-  const input = document.getElementById("text-"+id);
-  if (!input) throw new Error("The owner reply composer is unavailable.");
-  input.value = text;
-  if (c.channel === "EMAIL") await sendEmailReply(id); else await sendSmsReply(id);
-  d.proposal = state.proposals.find(p => p.proposal_id === id) || d.proposal;
-  if (text !== "CONFIRM" && (state.drafts[id]?.status !== "READY" || state.drafts[id]?.decision_draft?.decision !== c.decision)) throw new Error("The reply did not produce the expected preview. Nothing will be confirmed automatically.");
+async function resolvePresentation() {
+  const d = presentation;
+  if (!presentationActive() || d.busy || !d.proposal) return;
+  d.busy = true; d.error = ""; renderPresentation();
+  try {
+    const id = encodeURIComponent(d.proposal.proposal_id);
+    d.proposal = await api(`/api/v1/proposals/${id}`);
+    d.result = await api(`/api/v1/proposals/${id}/result`);
+    d.proposal._result = d.result;
+    state.proposals = [d.proposal];
+    d.phase = d.proposal.decision_status === "PENDING" ? "decide" : "result";
+    presentationRememberResult();
+    savePresentation();
+  } catch(error) {
+    d.error = "The application result could not be checked. Check its status or reload; no successful update has been assumed.";
+  } finally {
+    d.busy = false; renderPresentation();
+    if (d.phase === "result") window.scrollTo({top:0,behavior:"instant"});
+  }
 }
-async function presentationReadResult() {
-  const d = presentation, id = d.proposal.proposal_id;
-  d.proposal = await api(`/api/v1/proposals/${encodeURIComponent(id)}`);
-  d.result = await api(`/api/v1/proposals/${encodeURIComponent(id)}/result`);
-  d.proposal._result = d.result;
-  state.proposals = [d.proposal];
-  d.phase = "result";
-  if (!presentationExpected(d.proposal,d.result)) throw new Error("The decision or saved hours could not be verified. The demo stops here instead of showing success.");
+async function presentationComplete() {
+  // Completion is rechecked from all three server records, whatever the choices.
+  for (let i=0;i<PRESENTATION_CHAPTERS.length;i++) {
+    presentation.chapter=i;
+    await presentationLoadChapter();
+    if (!presentationVerified(presentation.proposal,presentation.result)) throw new Error("One business has not reached a verified outcome. Review it before completing the rehearsal.");
+    presentationRememberResult();
+  }
+  presentation.phase="complete";
 }
 async function preparePresentation() {
-  if (!presentationActive() || state.health.mode !== "mock") throw new Error("The scripted rehearsal is available only in its isolated mock workspace.");
+  if (!presentationActive() || state.health.mode !== "mock") throw new Error("The guided rehearsal is available only in its isolated mock workspace.");
   const reset = await api("/api/v1/operator/reset");
   await api("/api/v1/operator/reset","POST",{confirm_reset:true,preview_token:reset.preview_token},key());
   // Reset revokes sessions. Re-open the same local operator entry to get fresh cookies.
   await fetch("/",{credentials:"same-origin",cache:"no-store"});
-  state.owner = null; state.proposals = []; state.drafts = {}; state.replyText = {};
+  state.owner = null; state.proposals = []; state.drafts = {}; state.replyText = {}; state.editing = null;
   emailComposers.clear(); emailConversations.clear(); emailConfirmations.clear();
   smsComposers.clear(); smsConversations.clear(); smsConfirmations.clear();
-  Object.assign(presentation,{phase:"scan",chapter:0,proposal:null,message:null,result:null,cases:[],error:""});
+  Object.assign(presentation,{phase:"scan",chapter:0,proposal:null,message:null,result:null,cases:[],outcomes:[],error:""});
   presentation.run = await api("/api/v1/operator/fleet-runs","POST",{scope:"EXPLICIT_DATE",date:PRESENTATION_DATE});
   presentation.runId = presentation.run.run_id;
   savePresentation();
@@ -191,15 +231,9 @@ async function nextPresentation(restart=false) {
     if (restart || ["start","complete"].includes(d.phase)) await preparePresentation();
     else if (d.phase === "scan") { d.phase="suggest"; await presentationLoadChapter(); }
     else if (d.phase === "suggest") { await presentationMessage(); d.phase="contact"; }
-    else if (d.phase === "contact") { await presentationOwner(); d.phase="owner"; }
-    else if (d.phase === "owner") {
-      if (PRESENTATION_CHAPTERS[d.chapter].decision === "APPROVE") {
-        await decide(d.proposal.proposal_id,"APPROVE");
-        await presentationReadResult();
-      } else { await presentationSendReply(PRESENTATION_CHAPTERS[d.chapter].reply); d.phase="preview"; }
-    } else if (d.phase === "preview") { await presentationSendReply("CONFIRM"); await presentationReadResult(); }
+    else if (d.phase === "contact") { await presentationOwner(); d.phase="decide"; }
     else if (d.phase === "result") {
-      if (d.chapter === PRESENTATION_CHAPTERS.length-1) d.phase="complete";
+      if (d.chapter === PRESENTATION_CHAPTERS.length-1) await presentationComplete();
       else { d.chapter++; d.phase="suggest"; await presentationLoadChapter(); }
     }
     savePresentation();
@@ -211,25 +245,21 @@ async function initPresentation() {
   try { saved=JSON.parse(sessionStorage.getItem(PRESENTATION_KEY)||"null"); } catch {}
   const d = presentation;
   try {
-    if (saved && Number.isInteger(saved.chapter) && saved.chapter>=0 && saved.chapter<3 && ["start","scan","suggest","contact","owner","preview","result","complete"].includes(saved.phase)) {
-      Object.assign(d,{chapter:saved.chapter,phase:saved.phase,runId:typeof saved.runId==="string" ? saved.runId : null});
+    if (saved && Number.isInteger(saved.chapter) && saved.chapter>=0 && saved.chapter<3 && ["start","scan","suggest","contact","decide","owner","preview","result","complete"].includes(saved.phase)) {
+      // Old scripted step4 checkpoints become interactive without replaying input.
+      const phase = ["owner","preview"].includes(saved.phase) ? "decide" : saved.phase;
+      Object.assign(d,{chapter:saved.chapter,phase,runId:typeof saved.runId==="string" ? saved.runId : null});
       if (d.runId) d.run=await api(`/api/v1/operator/fleet-runs/${encodeURIComponent(d.runId)}`);
       if (d.phase!=="start" && !d.runId) d.phase="start";
       if (d.phase==="scan") await presentationPollScan();
       else if (!["start","complete"].includes(d.phase)) {
         await presentationLoadChapter();
-        if (d.proposal.decision_status==="PENDING" && ["contact","owner","preview"].includes(d.phase)) {
+        if (d.proposal.decision_status==="PENDING" && ["contact","decide"].includes(d.phase)) {
           await presentationMessage();
-          if (["owner","preview"].includes(d.phase)) await presentationOwner();
-          if (d.phase==="preview") await presentationSendReply(PRESENTATION_CHAPTERS[d.chapter].reply);
+          if (d.phase==="decide") await presentationOwner();
         }
       } else if (d.phase==="complete") {
-        // Re-derive completion from all three server records, not browser storage.
-        for (let i=0;i<3;i++) {
-          d.chapter=i; await presentationLoadChapter();
-          if (!presentationExpected(d.proposal,d.result)) throw new Error("An earlier rehearsal is incomplete. Start a fresh rehearsal.");
-        }
-        d.phase="complete";
+        await presentationComplete();
       }
     }
   } catch(error) { d.phase="start";d.chapter=0;d.runId=null;d.run=null;d.error="The previous rehearsal could not be restored. Next prepares a new isolated rehearsal."; }
@@ -238,4 +268,5 @@ async function initPresentation() {
 document.addEventListener("click",e => {
   if (e.target.closest("[data-presentation-next]")) void nextPresentation();
   else if (e.target.closest("[data-presentation-restart]")) void nextPresentation(true);
+  else if (e.target.closest("[data-presentation-refresh]")) void resolvePresentation();
 });

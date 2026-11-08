@@ -46,14 +46,23 @@ state is written under the ignored `runtime/` directory. Proposals, decisions, a
 contact preferences belong to that application state: no custom Yext Knowledge Graph
 fields or new publishers are added.
 
-**Next-button presentation.** The default page in this launch mode is a fixed,
-English-only rehearsal. Press **Next** once to prepare the real 3,032-entity scan;
-wait for it to finish before recording. Then keep pressing **Next**: WhatsApp approval
-→ email edit (`11:00-16:00`, then `CONFIRM`) → SMS decline (`NO`, then `CONFIRM`).
-Each chapter shows the proposal, outgoing message, owner screen and outcome. There
-is no typing or business selection. The owner is explicitly simulated, while
-decisions and read-back use the real application APIs against the local Yext mock.
-Unavailable APIs stop the presentation rather than display a successful result.
+**Guided presentation with interactive decisions.** The default page is an
+English-only rehearsal with three businesses in a fixed channel order: WhatsApp,
+email, then SMS. Press **Next** to prepare the real 3,032-entity scan and wait for it
+to finish before recording. Next guides you through Detect, Suggest and Contact.
+
+At **Decide**, use the customer screen yourself; there is no Next button to make a
+decision for you. WhatsApp supports Approve hours, Edit hours (preview, then confirm)
+and Keep current hours. In email or SMS, reply `YES`, `NO`, or exact hours such as
+`11:00-16:00`, review the preview, then reply `CONFIRM`. `CANCEL` discards a preview.
+You can choose any outcome for each business. Once processed, the actual decision
+opens **Apply & confirm** automatically. Next then takes you to the next business;
+you never need to try every outcome on a single proposal. The final summary reflects
+your choices. Reloading an undecided screen does not approve or replay any reply;
+unsent text and unconfirmed previews must be entered again.
+
+Contact is simulated. Decisions and read-back use the real application APIs against
+the local Yext mock. Failed or unverified updates never display a successful result.
 
 **Restart demo** resets only `runtime/presentation/`. The ordinary `runtime/` state
 and optional `runtime/sandbox/` state are kept separate. Gemini is disabled for this
@@ -80,8 +89,8 @@ With those credentials configured, run:
 .venv/bin/python run_demo.py --presentation --mode mock --with-sandbox
 ```
 
-This keeps the scripted mock presentation at `/` and the manual real-Yext workspace
-at `/sandbox/`. The Next-button script never approves a sandbox update.
+This keeps the guided mock presentation at `/` and the manual real-Yext workspace
+at `/sandbox/`. The presentation never approves a sandbox update.
 
 ## Build status (scope of this document)
 

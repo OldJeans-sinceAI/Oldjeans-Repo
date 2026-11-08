@@ -50,6 +50,8 @@
 .pt-controls { position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; justify-content: space-between; align-items: center; gap: 22px; padding: 17px max(32px, calc((100vw - 1260px)/2)); background: #f9faf5f5; border-top: 1px solid #dae3d7; backdrop-filter: blur(15px); box-shadow: 0 -8px 30px #193f2504; }
 .pt-controls p { font-size: 13px; color: #667b6b; margin: 7px 0 0; }
 .pt-controls .pt-next { min-width: 178px; min-height: 54px; font-size: 16px; border-radius: 13px; flex-shrink: 0; }
+.pt-owner-status { max-width: 220px; color: #285c46; font-size: 14px; font-weight: 700; text-align: right; }
+.pt-owner-help { font-size: 13px; line-height: 1.6; color: #667b6f; }
 .pt-error { border: 1px solid #eccda2; background: #fff5e7; color: #895314; border-radius: 12px; padding: 16px; margin: 15px 0; line-height: 1.6; font-size: 13px; }
 .pt-error button { margin: 10px; background: white; }
 .pt-content:has(.pt-owner-view) { display: grid; grid-template-columns: minmax(220px,.75fr) minmax(420px,1.25fr); gap: 30px; align-items: center; }
@@ -65,7 +67,6 @@
 .pt-shell #whatsapp-demo .wa-privacy { display: none; }
 .pt-shell #whatsapp-demo .wa-choice-help { display: none; }
 .pt-shell #whatsapp-demo .wa-hours { padding: 8px 0; margin: 8px 0; }
-.pt-shell #whatsapp-demo .wa-choices .primary { outline: 2px solid #569c7b; outline-offset: -2px; }
 .pt-shell #sms-demo .cm-sms-bubble { font-size: 13px; line-height: 1.4; }
 .pt-shell #sms-demo .cm-sms-thread { padding-top: 2px; }
 .pt-content:has(.pt-channel-email) .pt-owner-title { margin-bottom: 20px; }
