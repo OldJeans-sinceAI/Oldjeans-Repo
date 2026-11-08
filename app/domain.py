@@ -974,27 +974,27 @@ def interpret_reply(text: str, language: str, proposal: dict) -> dict:
     }
 
 
-def _ready_edit(proposal, version, date_s, hours, preview) -> dict:
+def _ready_edit(p, v, d_s, hrs, prv) -> dict:
     return {
         "status": "READY",
         "intent": "EDIT",
-        "preview": preview,
+        "preview": prv,
         "decision_draft": {
-            "proposal_version": version,
+            "proposal_version": v,
             "decision": "EDIT",
-            "edited_change": {"kind": "DATE_HOURS", "date": date_s, "hours": hours},
+            "edited_change": {"kind": "DATE_HOURS", "date": d_s, "hours": hrs},
             "confirmed": True,
         },
         "missing_fields": [],
     }
 
 
-def _needs(preview, missing) -> dict:
+def _needs(prv, msg) -> dict:
     return {
         "status": "NEEDS_CLARIFICATION",
         "intent": "UNKNOWN",
-        "preview": preview,
-        "missing_fields": missing,
+        "preview": prv,
+        "missing_fields": msg,
     }
 
 

@@ -5,22 +5,22 @@ const JOURNEY_STEPS = ["Detect", "Suggest", "Contact", "Decide", "Apply & confir
 const demoStorageKey = () => "connect-demo-journey" + APP_BASE;
 
 function newDemoState() {
-  let saved = {};
-  try { saved = JSON.parse(sessionStorage.getItem(demoStorageKey()) || "{}"); } catch {}
-  if (!saved || typeof saved !== "object" || Array.isArray(saved)) saved = {};
+  let s = {};
+  try { s = JSON.parse(sessionStorage.getItem(demoStorageKey()) || "{}"); } catch {}
+  if (!s || typeof s !== "object" || Array.isArray(s)) s = {};
   return {
-    stage: [1, 2, 3, 5].includes(saved.stage) ? saved.stage : 1,
-    date: /^\d{4}-\d{2}-\d{2}$/.test(saved.date || "") ? saved.date : "2026-12-24",
-    runId: typeof saved.runId === "string" ? saved.runId : null,
-    proposalId: typeof saved.proposalId === "string" ? saved.proposalId : null,
-    messageId: typeof saved.messageId === "string" ? saved.messageId : null,
+    stage: [1, 2, 3, 5].includes(s.stage) ? s.stage : 1,
+    date: /^\d{4}-\d{2}-\d{2}$/.test(s.date || "") ? s.date : "2026-12-24",
+    runId: typeof s.runId === "string" ? s.runId : null,
+    proposalId: typeof s.proposalId === "string" ? s.proposalId : null,
+    messageId: typeof s.messageId === "string" ? s.messageId : null,
     run: null, proposal: null, message: null, result: null, busy: false, note: "",
   };
 }
 function saveDemo() {
-  const {stage, date, runId, proposalId, messageId} = state.demo;
+  const {stage:st, date:dt, runId:rId, proposalId:pId, messageId:mId} = state.demo;
   // Never keep an owner capability in presentation state.
-  sessionStorage.setItem(demoStorageKey(), JSON.stringify({stage, date, runId, proposalId, messageId}));
+  sessionStorage.setItem(demoStorageKey(), JSON.stringify({stage:st, date:dt, runId:rId, proposalId:pId, messageId:mId}));
 }
 function journeySteps(active, finished = false) {
   return `<ol class="journey-steps" aria-label="Business hours journey">${JOURNEY_STEPS.map((label, i) => {

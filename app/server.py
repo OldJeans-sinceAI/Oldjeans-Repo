@@ -72,9 +72,9 @@ class Handler(BaseHTTPRequestHandler):
             c.load(self.headers.get("Cookie", ""))
         except Exception:
             return {}
-        prefix = "sandbox_" if getattr(self, "workspace", "") else ""
-        names = ("operator_session", "owner_session", "csrf_token")
-        return {k: c[prefix + k].value for k in names if prefix + k in c}
+        p = "sandbox_" if getattr(self, "workspace", "") else ""
+        n = ("operator_session", "owner_session", "csrf_token")
+        return {k: c[p + k].value for k in n if p + k in c}
 
     def reply(
         self, status, data, headers=None, content_type="application/json; charset=utf-8"
@@ -108,14 +108,14 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(raw)
 
     def validate(self, name, b):
-        errors = list(self.server.validators[name].iter_errors(b))
-        if errors:
+        errs = list(self.server.validators[name].iter_errors(b))
+        if errs:
             raise AppError(
                 422,
                 "INVALID_REQUEST",
                 "Request does not match " + name + ".",
                 details={
-                    "fields": [".".join(str(x) for x in e.path) for e in errors[:5]]
+                    "fields": [".".join(str(x) for x in e.path) for e in errs[:5]]
                 },
             )
 
@@ -475,20 +475,20 @@ class Handler(BaseHTTPRequestHandler):
         raise AppError(404, "NOT_FOUND", "Endpoint not found.")
 
     def mutate(self, s, path, body, fn):
-        key = self.headers.get("Idempotency-Key")
-        request = {"path": path, "method": self.command, "body": body}
+        k = self.headers.get("Idempotency-Key")
+        req = {"path": path, "method": self.command, "body": body}
         with s.lock:
-            old = s._idempotent(key, request)
+            old = s._idempotent(k, req)
             if old is not None:
                 return old
-            result = fn()
+            res = fn()
             # Responses carrying raw capabilities are not persisted. Mint a fresh one on replay.
-            saved = {k: v for k, v in result.items() if k != "owner_entry_path"}
+            sav = {x: v for x, v in res.items() if x != "owner_entry_path"}
             from .service import fingerprint
 
-            s.store.data["idempotency"][key] = {
-                "hash": fingerprint(request),
-                "result": saved,
+            s.store.data["idempotency"][k] = {
+                "hash": fingerprint(req),
+                "result": sav,
             }
             s.store.save()
-            return result
+            return res

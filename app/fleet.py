@@ -29,22 +29,22 @@ class FleetRunner:
         if changed:
             self.state.save()
 
-    def _public(self, j):
+    def _pub(self, j):
         return copy.deepcopy({k: v for k, v in j.items() if not k.startswith("_")})
 
     def get(self, jid=None):
         with self.lock:
             if jid is None:
-                jobs = list(self.state.data["jobs"].values())
+                jbs = list(self.state.data["jobs"].values())
                 return {
-                    "run": self._public(jobs[-1]) if jobs else None,
+                    "run": self._pub(jbs[-1]) if jbs else None,
                     "total_businesses": len(self.s.data.contacts),
                     "mode": self.s.mode,
                 }
             j = self.state.get("jobs", jid)
             if not j:
                 raise AppError(404, "RUN_NOT_FOUND", "Fleet run not found.")
-            return self._public(j)
+            return self._pub(j)
 
     def _update(self, jid, **values):
         with self.lock:
@@ -114,7 +114,7 @@ class FleetRunner:
             self.state.put("jobs", jid, j)
             self.state.save()
             self._launch(self._scan, jid, ids, body)
-            return self._public(j)
+            return self._pub(j)
 
     def _scan(self, jid, ids, body):
         started = time.monotonic()
@@ -197,19 +197,19 @@ class FleetRunner:
                 )
             if j["status"] not in ("COMPLETED", "COMPLETED_WITH_ERRORS"):
                 raise AppError(409, "SCAN_NOT_COMPLETE", "Complete a scan first.")
-            mode = body["delivery_mode"]
-            if j["contact_status"] == "COMPLETED" and j["contact_mode"] == mode:
-                return self._public(j)
+            m = body["delivery_mode"]
+            if j["contact_status"] == "COMPLETED" and j["contact_mode"] == m:
+                return self._pub(j)
             j.update(
                 contact_status="RUNNING",
-                contact_mode=mode,
+                contact_mode=m,
                 contact_processed=0,
                 contact_counts={},
                 error_code=None,
             )
             self.state.save()
-            self._launch(self._contacts, jid, mode)
-            return self._public(j)
+            self._launch(self._contacts, jid, m)
+            return self._pub(j)
 
     def _contacts(self, jid, mode):
         with self.lock:
