@@ -86,7 +86,7 @@ Gemini instead, stop the server and run the command without `--presentation`.
 `.env` and keep `GEMINI_ENABLED=true`; the key stays server-side and is never sent to
 the browser. The tested default model is `gemini-3.5-flash-lite`. Without a key the
 demo still runs — buttons, yes/no and exact intervals use local rules, and complex
-free text asks for exact hours instead of pretending a model was called.
+free text asks uses pattern matching.
 
 **Optional real Yext sandbox (`--with-sandbox`).** Writing to the team's real Yext
 workspace is opt-in and requires mock mode plus configured credentials
