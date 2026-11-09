@@ -1,0 +1,78 @@
+================================================================================
+GEMINI API KEY OPTIONALITY & FALLBACK MECHANISM EXPLANATION
+================================================================================
+
+1. OVERVIEW & CONFIGURATION MECHANICS
+--------------------------------------------------------------------------------
+In this application, server-side Gemini API integration is entirely optional.
+
+Configuration is driven by environment variables (as defined in `.env.example`):
+  - `GEMINI_API_KEY`: Google Gemini API key string. Left empty by default.
+  - `GEMINI_ENABLED`: Boolean flag ("true" / "false"). Defaults to "true".
+  - `GEMINI_MODEL`: Gemini model identifier (defaults to "gemini-3.5-flash-lite").
+
+When `OwnerReplies` initializes (`app/replies.py`), it inspects these variables:
+  api_key = (
+      os.getenv("GEMINI_API_KEY", "")
+      if os.getenv("GEMINI_ENABLED", "true").lower() == "true"
+      else ""
+  )
+  self.engine = engine or ReplyEngine(api_key, os.getenv("GEMINI_MODEL", DEFAULT_MODEL))
+
+Inside `ReplyEngine` (`app/teammate/reply_engine.py`), the `configured` property checks:
+  bool(self.api_key and re.fullmatch(r"[a-zA-Z0-9.-]+", self.model))
+
+If `GEMINI_API_KEY` is not provided (or `GEMINI_ENABLED` is false), `self.engine.configured` 
+evaluates to `False`.
+
+
+2. WHAT HAPPENS WHEN NO KEY IS PROVIDED
+--------------------------------------------------------------------------------
+When no key is configured, the application functions normally without crashing or
+throwing startup errors. It safely uses deterministic local rule-based logic:
+
+A. Application Health Checks (`/api/v1/health`)
+   - `Service.health()` includes `reply_interpreter: self.replies.health()`.
+   - When `configured` is `False`, the health report returns:
+       {
+         "provider": "RULES",
+         "model": null,
+         "configured": false,
+         "timeout_ms": 8000
+       }
+   - The overall service health remains `READY`.
+
+B. Exact Match & Command Parsing (Rule Engine)
+   - Fixed Commands (`app/service.py`): Messages such as "pause messages", "monthly",
+     or "allow future holiday corrections" are recognized directly by `Service.interpret()`.
+   - Exact Matches (`app/replies.py`): Common multilingual consent or rejection terms
+     ("yes", "ok", "no", "kyllä", "suljettu", "joo", "ei", etc.) and exact time range
+     patterns (e.g. "10:00-16:00") bypass LLM calls entirely.
+   - These return immediate rule results with metadata:
+       "interpretation": {"provider": "RULES", "latency_ms": 0, "error_code": null}
+
+C. Arbitrary / Unstructured Free-Text Replies
+   - If a user sends complex or ambiguous free text (e.g., "We might close early if it rains")
+     when no Gemini key is provided:
+   - `OwnerReplies.interpret()` detects `not self.engine.configured` and returns:
+       {
+         "status": "NEEDS_CLARIFICATION",
+         "intent": "CLARIFY",
+         "preview": "Confirm the exact change using the editor.",
+         "missing_fields": ["hours"],
+         "interpretation": {
+           "provider": "RULES",
+           "latency_ms": 0,
+           "error_code": "NOT_CONFIGURED"
+         }
+       }
+   - Unparsed complex text is NEVER treated as approval or rejection, preventing unsafe or
+     erroneous calendar modifications.
+
+
+3. SUMMARY OF DESIGN ADVANTAGES
+--------------------------------------------------------------------------------
+1. Zero Hard Dependency: Full application functionality is maintained offline or without external API credentials.
+2. Security & Privacy: Credentials (when configured) stay strictly on the backend and are never sent to browser clients.
+3. Safe Fallback: Missing keys or LLM service outages fall back gracefully to explicit UI buttons and exact rule-based choices.
+================================================================================
